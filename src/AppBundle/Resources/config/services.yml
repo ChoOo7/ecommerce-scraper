@@ -1,0 +1,7 @@
+parameters: 
+  
+services: 
+  ecom.price: 
+    arguments: 
+    class: AppBundle\Service\EcomPrice
+    
