@@ -2,6 +2,16 @@ parameters:
   
 services: 
   ecom.price: 
-    arguments: 
-    class: AppBundle\Service\EcomPrice
+      arguments: 
+      class: AppBundle\Service\EcomPrice
+      
+  ecom.google_drive_token: 
+      arguments: 
+      class: AppBundle\Service\GoogleDriveToken
+      
+  ecom.sheet_updater:
+      class: AppBundle\Service\SheetUpdater
+      arguments: 
+          - "@ecom.google_drive_token"
+          
     

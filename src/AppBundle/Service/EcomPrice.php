@@ -47,6 +47,26 @@ class EcomPrice
 
             case 'www.cdiscount.com':
                 return $this->getPriceFromCDiscount($url);
+
+            case 'www.arredatutto.com':
+                return $this->getPriceFromArredatutto($url);
+
+            case 'www.priceminister.com':
+                return $this->getPriceFromPriceMinister($url);
+
+            case 'www.mistergooddeal.com':
+                return $this->getPriceFromMisterGoodDeal($url);
+
+            case 'www.electrodepot.fr':
+                return $this->getPriceFromElectroDepot($url);
+
+            case 'www.abribatelectromenager.fr':
+                return $this->getPriceFromAbribatElectromenager($url);
+                
+            case 'www.pixmania.fr':
+                //On sait pas faire
+                return null;
+                
         }
         return null;
     }
@@ -156,6 +176,82 @@ class EcomPrice
 
         return $price;
     }
+
+    protected function getPriceFromArredatutto($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        //var_dump($crawler);
+        $crawler->filter('meta[itemprop="price"]')->each(function ($node) use (& $price){
+            $price = ($node->attr('content'));
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
+    protected function getPriceFromPriceMinister($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        //var_dump($crawler);
+        $crawler->filter('.gsRow .col-xs-6.prdInfos .price.spacerBottomXs')->each(function ($node) use (& $price){
+            $price = ($node->text());
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
+    protected function getPriceFromMisterGoodDeal($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        //var_dump($crawler);
+        $crawler->filter('#darty_product_base_info .price.price_xxl')->each(function ($node) use (& $price){
+            $price = ($node->text());
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
+    protected function getPriceFromElectroDepot($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        //var_dump($crawler);
+        $crawler->filter('.regular-price')->each(function ($node) use (& $price){
+            $price = ($node->text());
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
+    protected function getPriceFromAbribatElectromenager($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        $crawler->filter('meta[itemprop="price"]')->each(function ($node) use (& $price){
+            $price = ($node->attr('content'));
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
+
     
     protected function formatPrice($price)
     {
