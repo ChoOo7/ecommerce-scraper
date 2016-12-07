@@ -38,9 +38,24 @@ class GoogleDriveToken
         // Load previously authorized credentials from a file.
         //$credentialsPath = expandHomeDirectory(CREDENTIALS_PATH);
         $credentialsPath = CREDENTIALS_PATH;
-        if (file_exists($credentialsPath)) {
-            $accessToken = json_decode(file_get_contents($credentialsPath), true);
-        } else {
+        
+        try {
+            if (file_exists($credentialsPath))
+            {
+                $accessToken = json_decode(file_get_contents($credentialsPath), true);
+                $client->setAccessToken($accessToken);
+
+                if ($client->isAccessTokenExpired()) {
+                    $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+                    file_put_contents($credentialsPath, json_encode($client->getAccessToken()));
+                }
+                
+            }else{
+                throw new \Exception();
+            }
+        }
+        catch(\Exception $e)
+        {        
             // Request authorization from the user.
             //$client->setRedirectUri("https://www.chooo7.com/aouthcallback");
             $client->setRedirectUri("https://example.com");
@@ -59,14 +74,15 @@ class GoogleDriveToken
             }
             file_put_contents($credentialsPath, json_encode($accessToken));
             printf("Credentials saved to %s\n", $credentialsPath);
+            
+            if ($client->isAccessTokenExpired()) {
+                $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+                file_put_contents($credentialsPath, json_encode($client->getAccessToken()));
+            }
         }
-        $client->setAccessToken($accessToken);
-
+        
         // Refresh the token if it's expired.
-        if ($client->isAccessTokenExpired()) {
-            $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-            file_put_contents($credentialsPath, json_encode($client->getAccessToken()));
-        }
+        
         return $client;
     }
 

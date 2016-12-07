@@ -40,6 +40,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $letters='abcdefghijklmnopqrstuvwxyz';
         $columnForPrice=null;
         $columnForUrl=null;
+        $columnForDate=null;
         for($iColumn=0;$iColumn<24;$iColumn++)
         {
             $letter = $letters{$iColumn};
@@ -50,17 +51,42 @@ class SheetUpdateCommand extends ContainerAwareCommand
             }elseif($value == "Lien pour acheter")
             {
                 $columnForUrl = $letter;
+            }elseif($value == "Date MAJ Prix")
+            {
+                $columnForDate = $letter;
             }
+            if($columnForUrl && $columnForPrice && $columnForDate)
+            {
+                break;
+            }
+        }
+
+        if(empty($columnForPrice))
+        {
+            throw new \Exception("Unable to find price column");
+        }
+        if(empty($columnForUrl))
+        {
+            throw new \Exception("Unable to find url column");
         }
         
         $maxLineNumber = 100;
+        $nbErrorLeft=10;
         for($lineNumber=2;$lineNumber<=$maxLineNumber;$lineNumber++)
         {
             $actualPrice = $ecomSheet->getSheetValue($docId, $columnForPrice.$lineNumber);
+            $actualPrice = $ecomPriceSer->formatPrice($actualPrice);
             $url = $ecomSheet->getSheetValue($docId, $columnForUrl.$lineNumber);
             if(empty($url))
             {
-                break;
+                $nbErrorLeft--;
+                if($nbErrorLeft>=0)
+                {
+                    continue;
+                }else
+                {
+                    break;
+                }
             }
             $newPrice = $ecomPriceSer->getPrice($url);
             if(empty($newPrice))
@@ -70,12 +96,20 @@ class SheetUpdateCommand extends ContainerAwareCommand
                 if($newPrice == $actualPrice)
                 {
                     $this->output->writeln('' . $url . ' ' . $actualPrice.' - not modified');
+                    if($columnForDate)
+                    {
+                        $ecomSheet->setSheetValue($docId, $columnForDate.$lineNumber, date('Y-m-d H:i:s'));
+                    }
                 }else{
                     $evol = (round((100*($actualPrice - $newPrice) / $actualPrice)));
                     $this->output->writeln('' . $url . ' ' . $actualPrice.' => '.$newPrice.' ('.$evol.'%)');
                     if($evol < 30)
                     {
                         $ecomSheet->setSheetValue($docId, $columnForPrice.$lineNumber, $newPrice);
+                        if($columnForDate)
+                        {
+                            $ecomSheet->setSheetValue($docId, $columnForDate.$lineNumber, date('Y-m-d H:i:s'));
+                        }
                     }
                 }
             }
