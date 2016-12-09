@@ -28,26 +28,65 @@ class SheetUpdater
 
     public function getSheetValue($spreadsheetId, $cellIdentifier)
     {
-        $client = $this->client->getClient();
+        $try = 0;
+        $maxTry = 10;
+        while($try < $maxTry)
+        {
+            $try ++;
+            try
+            {
+                $client = $this->client->getClient();
 
-        $service = new \Google_Service_Sheets($client);
-        $response = $service->spreadsheets_values->get($spreadsheetId, $cellIdentifier);
-        $values = $response->getValues();
-        return $values[0][0];
+                $service = new \Google_Service_Sheets($client);
+                $response = $service->spreadsheets_values->get($spreadsheetId, $cellIdentifier);
+                $values = $response->getValues();
+
+                return $values[0][0];
+            }
+            catch(\Exception $e)
+            {
+                echo "\n".$e->getMessage();
+                if($try >= $maxTry)
+                {
+                    throw $e;
+                }
+            }
+            sleep($try);
+        }
     }
 
     public function setSheetValue($spreadsheetId, $cellIdentifier, $cellValue)
     {
-        $client = $this->client->getClient();
+        $try = 0;
+        $maxTry = 10;
+        while($try < $maxTry)
+        {
+            $try ++;
+            try
+            {
+                $client = $this->client->getClient();
 
-        $service = new \Google_Service_Sheets($client);
-        
-        $postBody = new \Google_Service_Sheets_ValueRange();
-        $postBody->setRange($cellIdentifier);
-        $postBody->setValues(array(array($cellValue)));
-        $opts = array();
-        $opts['valueInputOption']='RAW';
+                $service = new \Google_Service_Sheets($client);
 
-        $service->spreadsheets_values->update($spreadsheetId, $cellIdentifier, $postBody, $opts);
+                $postBody = new \Google_Service_Sheets_ValueRange();
+                $postBody->setRange($cellIdentifier);
+                $postBody->setValues(array(array($cellValue)));
+                $opts = array();
+                $opts['valueInputOption'] = 'RAW';
+
+                $service->spreadsheets_values->update($spreadsheetId, $cellIdentifier, $postBody, $opts);
+                return ;
+            }
+            catch(\Exception $e)
+            {
+                echo "\n".$e->getMessage();
+                if($try >= $maxTry)
+                {
+                    throw $e;
+                }
+            }
+
+            sleep($try);
+        }
     }
 }

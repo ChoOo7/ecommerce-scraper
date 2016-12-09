@@ -30,6 +30,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $startTime = time();
         $this->input = $input;
         $this->output = $output;
         $ecomPriceSer = $this->getContainer()->get('ecom.price');
@@ -98,17 +99,17 @@ class SheetUpdateCommand extends ContainerAwareCommand
                     $this->output->writeln('' . $url . ' ' . $actualPrice.' - not modified');
                     if($columnForDate)
                     {
-                        $ecomSheet->setSheetValue($docId, $columnForDate.$lineNumber, date('Y-m-d H:i:s'));
+                        $ecomSheet->setSheetValue($docId, $columnForDate.$lineNumber, date('Y-m-d H:i:s', $startTime));
                     }
                 }else{
                     $evol = (round((100*($actualPrice - $newPrice) / $actualPrice)));
                     $this->output->writeln('' . $url . ' ' . $actualPrice.' => '.$newPrice.' ('.$evol.'%)');
-                    if($evol < 30)
+                    if($evol < 20)
                     {
                         $ecomSheet->setSheetValue($docId, $columnForPrice.$lineNumber, $newPrice);
                         if($columnForDate)
                         {
-                            $ecomSheet->setSheetValue($docId, $columnForDate.$lineNumber, date('Y-m-d H:i:s'));
+                            $ecomSheet->setSheetValue($docId, $columnForDate.$lineNumber, date('Y-m-d H:i:s', $startTime));
                         }
                     }
                 }

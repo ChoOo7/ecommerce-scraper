@@ -86,10 +86,16 @@ class EcomPrice
 
             case 'www.lacooplr.fr':
                 return $this->getPriceFromLaCoopLr($url);
-            
+
             case 'www.magasins-privilege.fr':
                 return $this->getPriceFromMagasinsPrivilege($url);
-                
+
+            case 'www.idealprice.fr':
+                return $this->getPriceFromIdealPrice($url);
+
+            case 'www.villatech.fr':
+                return $this->getPriceFromVillaTech($url);
+
             case 'www.pixmania.fr':
                 //On sait pas faire
                 return null;
@@ -104,7 +110,6 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $done = false;
         $crawler->filter('.informations .price p .exponent')->each(function ($node) use (& $price, &$done){
             if( ! $done)
@@ -130,7 +135,6 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $crawler->filter('.product_metas  .darty_prix')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
@@ -147,13 +151,16 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $crawler->filter('#priceblock_ourprice')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
-        $price = str_replace('EUR ', '', $price);
-        $price = str_replace(',', '.', $price);
-        $price = (float) $price;
+        $crawler->filter('#unqualifiedBuyBox .a-color-price')->each(function ($node) use (& $price){
+            $price = ($node->text());
+        });
+        $crawler->filter('#soldByThirdParty .a-color-price')->each(function ($node) use (& $price){
+            $price = ($node->text());
+        });        
+        $price = $this->formatPrice($price);
 
         return $price;
     }
@@ -164,7 +171,6 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $moid = null;
         if(stripos($url, '#moid:') !== false)
         {
@@ -204,7 +210,6 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $crawler->filter('.fTopPrice .price')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
@@ -219,7 +224,6 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $crawler->filter('meta[itemprop="price"]')->each(function ($node) use (& $price){
             $price = ($node->attr('content'));
         });
@@ -234,7 +238,6 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $crawler->filter('.gsRow .col-xs-6.prdInfos .price.spacerBottomXs')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
@@ -403,6 +406,44 @@ class EcomPrice
         return $price;
     }
 
+    protected function getPriceFromIdealPrice($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        $done = false;
+        $crawler->filter('#our_price_display')->each(function ($node) use (& $price, & $done){
+            if( ! $done)
+            {
+                $price = ($node->text());
+                $done = true;
+            }
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
+    protected function getPriceFromVillaTech($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        $done = false;
+        $crawler->filter('#pricing > div > p[itemprop="price"]')->each(function ($node) use (& $price, &$done){
+            if( ! $done)
+            {
+                $price = ($node->text());
+                $done = true;
+            }
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
     protected function getPriceFromBackMarket($url)
     {
         $price = 0;
@@ -436,7 +477,7 @@ class EcomPrice
         $price = str_replace('€', '', $price);
         $price = str_replace(' ', '', $price);
         $price = str_replace(' ', '', $price);        
-        $price = str_replace('EUR ', '', $price);
+        $price = str_replace('EUR', '', $price);
         $price = str_replace(',', '.', $price);
         $price = trim($price);
         
