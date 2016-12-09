@@ -47,7 +47,7 @@ class GoogleDriveToken
 
                 if ($client->isAccessTokenExpired()) {
                     $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-                    file_put_contents($credentialsPath, json_encode($client->getAccessToken()));
+                    //file_put_contents($credentialsPath, json_encode($client->getAccessToken()));
                 }
                 
             }else{
@@ -77,7 +77,7 @@ class GoogleDriveToken
             
             if ($client->isAccessTokenExpired()) {
                 $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-                file_put_contents($credentialsPath, json_encode($client->getAccessToken()));
+                //file_put_contents($credentialsPath, json_encode($client->getAccessToken()));
             }
         }
         

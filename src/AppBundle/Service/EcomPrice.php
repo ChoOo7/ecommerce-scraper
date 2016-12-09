@@ -249,7 +249,6 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $crawler->filter('#darty_product_base_info .price.price_xxl')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
@@ -264,7 +263,6 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        //var_dump($crawler);
         $crawler->filter('.regular-price')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
@@ -427,10 +425,21 @@ class EcomPrice
         {
             $price = str_replace('€', '.', $price);
         }
+        if(preg_match('!([0-9]+)\.([0-9]{3,})!is', $price))
+        {
+            $price = str_replace('.', '', $price);
+        }
+        if(preg_match('!([0-9]+),([0-9]{3,})!is', $price))
+        {
+            $price = str_replace(',', '', $price);
+        }
         $price = str_replace('€', '', $price);
+        $price = str_replace(' ', '', $price);
+        $price = str_replace(' ', '', $price);        
         $price = str_replace('EUR ', '', $price);
         $price = str_replace(',', '.', $price);
         $price = trim($price);
+        
         $price = (float) $price;
         return $price;
     }
