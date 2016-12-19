@@ -4,7 +4,9 @@ services:
   ecom.price: 
       arguments: 
       class: AppBundle\Service\EcomPrice
-      
+  ecom.affiliation: 
+      arguments: 
+      class: AppBundle\Service\EcomAffiliation    
   ecom.google_drive_token: 
       arguments: 
       class: AppBundle\Service\GoogleDriveToken
