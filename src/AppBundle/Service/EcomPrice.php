@@ -95,6 +95,9 @@ class EcomPrice
 
             case 'www.villatech.fr':
                 return $this->getPriceFromVillaTech($url);
+            
+            case 'track.effiliation.com':
+                return $this->getPriceFromEffiliation($url);
 
             case 'www.pixmania.fr':
                 //On sait pas faire
@@ -442,6 +445,15 @@ class EcomPrice
         $price = $this->formatPrice($price);
 
         return $price;
+    }
+
+    protected function getPriceFromEffiliation($url)
+    {
+        $queryString = parse_url($url, PHP_URL_QUERY);
+        $params = array();
+        parse_str($queryString, $params);
+        $insideUrl = $params['url']; 
+        return $this->getPrice($insideUrl);
     }
 
     protected function getPriceFromBackMarket($url)
