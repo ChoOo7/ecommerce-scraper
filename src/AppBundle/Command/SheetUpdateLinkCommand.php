@@ -79,7 +79,7 @@ class SheetUpdateLinkCommand extends ContainerAwareCommand
             if($newUrl != $url)
             {
                 $this->output->writeln('' . $url . ' => ' . $newUrl.'');
-                //$ecomSheet->setSheetValue($docId, $columnForUrl.$lineNumber, $newUrl);
+                $ecomSheet->setSheetValue($docId, $columnForUrl.$lineNumber, $newUrl);
             }
         }
         
