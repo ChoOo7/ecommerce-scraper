@@ -95,7 +95,10 @@ class EcomPrice
 
             case 'www.villatech.fr':
                 return $this->getPriceFromVillaTech($url);
-            
+
+            case 'www.ubaldi.com':
+                return $this->getPriceFromUbaldi($url);
+
             case 'track.effiliation.com':
                 return $this->getPriceFromEffiliation($url);
 
@@ -439,6 +442,25 @@ class EcomPrice
             if( ! $done)
             {
                 $price = ($node->text());
+                $done = true;
+            }
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
+    protected function getPriceFromUbaldi($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        $done = false;
+        $crawler->filter('.fa-infos-principales .prix.rebours-prix')->each(function ($node) use (& $price, &$done){
+            if( ! $done)
+            {
+                $price = ($node->attr('data-prix-vente'));
                 $done = true;
             }
         });
