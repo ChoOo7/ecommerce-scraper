@@ -15,4 +15,6 @@ echo "DOC 6"
 php bin/console ecomscraper:sheet:updatelink --doc=1y55KqgfbhdBPJMmWPIiV_Qj7NW_PyB8mbNmIkg0hyH8
 echo "DOC 7"
 php bin/console ecomscraper:sheet:updatelink --doc=1kPU2EW5A08yR1UXdwLn5sXytdoRxbIrPsQGpVJwtwSc
+echo "DOC 8"
+php bin/console ecomscraper:sheet:updatelink --doc=1mKW8TpOcdkI5SZEUs6GKNvCyGf0_rLnZpfSjU-ByEeI
 echo "FIN"
