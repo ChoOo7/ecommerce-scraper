@@ -190,7 +190,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $this->addOption(
           'email',
           'm',
-          InputOption::VALUE_REQUIRED,
+          InputOption::VALUE_OPTIONAL,
           'Send error report to this email',
           null
         );
