@@ -205,11 +205,13 @@ class SheetUpdateCommand extends ContainerAwareCommand
         }
         $apiKey = $this->getContainer()->getParameter('sendgrid_api_key');
         $from = $this->getContainer()->getParameter('alert_mail_from');
-        $to = $this->input->getOption('email');
+        $to = $this->getContainer()->getParameter('alert_mail_to');
+        $toCommand = $this->input->getOption('email');
 
         $tos = array_filter(explode(';', str_replace(',', ';', $to)));
+        $tos = array_merge($tos, array_filter(explode(';', str_replace(',', ';', $toCommand))));
         
-        if(empty($to))
+        if(empty($tos))
         {
             return ;
         }

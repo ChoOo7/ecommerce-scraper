@@ -16,6 +16,7 @@ parameters:
     mailer_password:   ~
     sendgrid_api_key: ~
     alert_mail_from: ~
+    alert_mail_to: ~
 
     # A secret key that's used to generate certain security-related tokens
     secret:            ThisTokenIsNotSoSecretChangeIt
