@@ -1,6 +1,6 @@
 #!/bin/bash
 cd /var/local_www/ecommerce-scraper/
-EMAIL="simon.minotto@gmail.com;contact@environmental-picture.com"
+EMAIL=""
 
 echo "DOC 1"
 php bin/console ecomscraper:sheet:update --doc=1WrQTglh9hLpYC2pL9Y9GYKNkMj28a1zOgw0JzEeKfzQ --email "$EMAIL"
