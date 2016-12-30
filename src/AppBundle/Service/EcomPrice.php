@@ -81,6 +81,9 @@ class EcomPrice
             case 'www.allopneus.com':
                 return $this->getPriceFromAlloPneus($url);
 
+            case 'www.touspourunprix.fr':
+                return $this->getPriceFromTousPourUnPrix($url);
+
             case 'www.tyrigo.com':
                 return $this->getPriceFromTyrigo($url);
 
@@ -104,6 +107,13 @@ class EcomPrice
 
             case 'www.vieffetrade.eu':
                 return $this->getPriceFromVieffetrade($url);
+
+            case 'www.klarstein.fr':
+                return $this->getPriceFromKlarstein($url);
+
+            case 'www.centralepneus.fr':
+                return $this->getPriceFromCentralePneus($url);
+                
 
             case 'www.pixmania.fr':
                 //On sait pas faire
@@ -250,6 +260,25 @@ class EcomPrice
         $crawler->filter('.gsRow .col-xs-6.prdInfos .price.spacerBottomXs')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
+        $crawler->filter('#prdRightCol .price')->each(function ($node) use (& $price){
+            $price = ($node->text());
+        });
+
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+    
+    protected function getPriceFromTousPourUnPrix($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        $crawler->filter('td.prix')->each(function ($node) use (& $price){
+            $price = ($node->text());
+        });
+
         $price = $this->formatPrice($price);
 
         return $price;
@@ -487,6 +516,40 @@ class EcomPrice
         return $price;
     }
 
+    protected function getPriceFromKlarstein($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        $done = false;
+        $crawler->filter('#zoomwindow .zoxid-price')->each(function ($node) use (& $price, &$done){
+            if( ! $done)
+            {
+                $price = ($node->text());
+                $done = true;
+            }
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
+
+    protected function getPriceFromCentralePneus($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        $done = false;
+        $crawler->filter('meta[itemprop="price"]')->each(function ($node) use (& $price){
+            $price = ($node->attr('content'));
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
 
     protected function getPriceFromEffiliation($url)
     {

@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "74094a5363abcbba76c797a75cac3ae4",
-    "content-hash": "3ae474a7ea35ea4b214a17f1f7f591c6",
+    "hash": "546b038ef7e2817c7cd3c111feebd815",
+    "content-hash": "a919a3baed94c87399f631a24f2675fe",
     "packages": [
         {
             "name": "asimlqt/php-google-spreadsheet-client",
@@ -870,6 +870,60 @@
             "time": "2016-11-15 16:27:29"
         },
         {
+            "name": "fastglass/sendgrid",
+            "version": "1.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/taz77/sendgrid-php-ng.git",
+                "reference": "f73746bf488c013f47b31ec38343e8d72d5e6ae0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/taz77/sendgrid-php-ng/zipball/f73746bf488c013f47b31ec38343e8d72d5e6ae0",
+                "reference": "f73746bf488c013f47b31ec38343e8d72d5e6ae0",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": ">=6.2.1",
+                "php": ">=5.5.0",
+                "sendgrid/smtpapi": "~0.5"
+            },
+            "replace": {
+                "sendgrid/sendgrid-php": "*"
+            },
+            "require-dev": {
+                "mockery/mockery": "~0.9",
+                "phpunit/phpunit": "~4.4",
+                "vlucas/phpdotenv": "~1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "SendGrid\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brady Owens",
+                    "email": "brady@fastglass.net",
+                    "homepage": "https://github.com/taz77"
+                }
+            ],
+            "description": "This library allows you to send emails through SendGrid using PHP and Guzzle 6.x.",
+            "homepage": "https://github.com/taz77/sendgrid-php",
+            "keywords": [
+                "email",
+                "grid",
+                "send",
+                "sendgrid"
+            ],
+            "time": "2016-07-20 05:53:01"
+        },
+        {
             "name": "firebase/php-jwt",
             "version": "v4.0.0",
             "source": {
@@ -1685,6 +1739,54 @@
                 "psr-3"
             ],
             "time": "2016-10-10 12:19:37"
+        },
+        {
+            "name": "sendgrid/smtpapi",
+            "version": "0.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sendgrid/smtpapi-php.git",
+                "reference": "05ccf57bad5d1524e479b6dc0a2dfade88b3fbe5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sendgrid/smtpapi-php/zipball/05ccf57bad5d1524e479b6dc0a2dfade88b3fbe5",
+                "reference": "05ccf57bad5d1524e479b6dc0a2dfade88b3fbe5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "replace": {
+                "sendgrid/smtpapi-php": "*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Smtpapi": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Build SendGrid X-SMTPAPI headers in PHP.",
+            "homepage": "http://github.com/sendgrid/smtpapi-php",
+            "keywords": [
+                "X-SMTP",
+                "api",
+                "email",
+                "grid",
+                "send",
+                "sendgrid",
+                "smtp",
+                "smtpapi",
+                "xsmtp"
+            ],
+            "time": "2015-04-14 02:37:45"
         },
         {
             "name": "sensio/distribution-bundle",

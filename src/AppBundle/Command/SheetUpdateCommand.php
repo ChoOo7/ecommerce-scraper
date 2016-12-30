@@ -24,7 +24,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
 {
 
     
-
+    protected $errors = array();
+    
     /**
      * {@inheritDoc}
      */
@@ -54,7 +55,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
             {
                 $letter = $letters{$iColumn};
                 //$value = $ecomSheet->getSheetValue($docId, $letter . "1", $sheet['title']);
-                $value = $headers[$iColumn];
+                $value = array_key_exists($iColumn, $headers) ? $headers[$iColumn] : null;
                 if ($value == "Prix (€)" || $value == "Le meilleur prix")
                 {
                     $columnForPrice = $letter;
@@ -129,6 +130,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                     $newPrice = $ecomPriceSer->getPrice($url);
                     if (empty($newPrice))
                     {
+                        $this->errors[] = 'Onglet '.$sheet['title'].' Ligne '.$globalLineNumber.' - '.'No price detected for ' . $url . '';
                         $this->output->writeln('<error>No price detected for ' . $url . '</error>');
                     } else
                     {
@@ -150,6 +152,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 {
                                     $ecomSheet->setSheetValue($docId, $columnForDate . $globalLineNumber, date('Y-m-d H:i:s', $startTime, $sheet['title']));
                                 }
+                            }else{
+                                $this->errors[] = 'Onglet '.$sheet['title'].' Ligne '.$globalLineNumber.' - '.'Variation de prix trop importante '.$actualPrice.' devient '.$newPrice.'  - '. $url . '';
                             }
                         }
                     }
@@ -158,6 +162,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
             }
             
         }
+        
+        $this->sendMailWithErrors();
         
         $this->output->writeln("DONE");
     }
@@ -180,6 +186,60 @@ class SheetUpdateCommand extends ContainerAwareCommand
           'Document segment',
           null
         );
+
+        $this->addOption(
+          'email',
+          'm',
+          InputOption::VALUE_REQUIRED,
+          'Send error report to this email',
+          null
+        );
+        
+    }
+    
+    protected function sendMailWithErrors()
+    {
+        if(empty($this->errors))
+        {
+            return;
+        }
+        $apiKey = $this->getContainer()->getParameter('sendgrid_api_key');
+        $from = $this->getContainer()->getParameter('alert_mail_from');
+        $to = $this->input->getOption('email');
+
+        $tos = array_filter(explode(';', str_replace(',', ';', $to)));
+        
+        if(empty($to))
+        {
+            return ;
+        }
+        
+        $this->sendGrid = new \SendGrid\Client($apiKey);
+
+        $docId = $this->input->getOption('doc');
+        $documentLink = 'https://docs.google.com/spreadsheets/d/'.$docId.'/edit';
+
+        $subject = "Import result error";
+        $body = "<h1>Errors</h1>";
+        $body .= "\n".'<div>';
+        $body .= "\n".'<p>Document : <a href="'.$documentLink.'">'.$documentLink.'</a></p>';
+        $body .= "\n".'</div>';
+        $body .= "\n".'<div>';
+        $body .= "\n".'<ul>';
+        foreach($this->errors as $error)
+        {
+            $body .= "\n".'<li>'.$error.'</li>';
+        }
+        $body .= "\n".'</ul>';
+        $body .= "\n".'</div>';
+        
+        $email = new \SendGrid\Email();
+        foreach($tos as $to)
+        {
+            $email->addTo($to)->setFrom($from)->setSubject($subject)->setHtml($body);
+
+            $resp = $this->sendGrid->send($email);
+        }
         
     }
 }
