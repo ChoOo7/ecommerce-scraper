@@ -37,84 +37,126 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $ecomSheet = $this->getContainer()->get('ecom.sheet_updater');
 
         $docId = $this->input->getOption('doc');
-
-        $letters='abcdefghijklmnopqrstuvwxyz';
-        $columnForPrice=null;
-        $columnForUrl=null;
-        $columnForDate=null;
-        for($iColumn=0;$iColumn<24;$iColumn++)
-        {
-            $letter = $letters{$iColumn};
-            $value = $ecomSheet->getSheetValue($docId, $letter."1");
-            if($value == "Prix (€)")
-            {
-                $columnForPrice = $letter;
-            }elseif($value == "Lien pour acheter")
-            {
-                $columnForUrl = $letter;
-            }elseif($value == "Date MAJ Prix")
-            {
-                $columnForDate = $letter;
-            }
-            if($columnForUrl && $columnForPrice && $columnForDate)
-            {
-                break;
-            }
-        }
-
-        if(empty($columnForPrice))
-        {
-            throw new \Exception("Unable to find price column");
-        }
-        if(empty($columnForUrl))
-        {
-            throw new \Exception("Unable to find url column");
-        }
         
-        $maxLineNumber = 100;
-        $nbErrorLeft=10;
-        for($lineNumber=2;$lineNumber<=$maxLineNumber;$lineNumber++)
+        $sheets = $ecomSheet->getSheets($docId);
+        foreach($sheets as $sheet)
         {
-            $actualPrice = $ecomSheet->getSheetValue($docId, $columnForPrice.$lineNumber);
-            $actualPrice = $ecomPriceSer->formatPrice($actualPrice);
-            $url = $ecomSheet->getSheetValue($docId, $columnForUrl.$lineNumber);
-            if(empty($url))
+            $this->output->writeln("starting sheet ".$sheet['title']."");
+            
+            $letters = 'abcdefghijklmnopqrstuvwxyz';
+            $columnForPrice = null;
+            $columnForUrl = null;
+            $columnForDate = null;
+            $headers = $ecomSheet->getSheetValue($docId, "A1:Z1", $sheet['title']);
+            $headers = $headers[0];
+            
+            for ($iColumn = 0; $iColumn < 24; $iColumn++)
             {
-                $nbErrorLeft--;
-                if($nbErrorLeft>=0)
+                $letter = $letters{$iColumn};
+                //$value = $ecomSheet->getSheetValue($docId, $letter . "1", $sheet['title']);
+                $value = $headers[$iColumn];
+                if ($value == "Prix (€)" || $value == "Le meilleur prix")
                 {
-                    continue;
-                }else
+                    $columnForPrice = $letter;
+                } elseif ($value == "Lien pour acheter")
+                {
+                    $columnForUrl = $letter;
+                } elseif ($value == "Date MAJ Prix")
+                {
+                    $columnForDate = $letter;
+                }
+                if ($columnForUrl && $columnForPrice && $columnForDate)
                 {
                     break;
                 }
             }
-            $newPrice = $ecomPriceSer->getPrice($url);
-            if(empty($newPrice))
+
+            if (empty($columnForPrice))
             {
-                $this->output->writeln('<error>No price detected for '.$url.'</error>');
-            }else{
-                if($newPrice == $actualPrice)
+                throw new \Exception("Unable to find price column");
+            }
+            if (empty($columnForUrl))
+            {
+                throw new \Exception("Unable to find url column");
+            }
+
+            $nbPerPacket = 50;
+            $packetIndex = 0;
+            $continueScanning = true;
+            while($continueScanning)
+            {
+                $lineNumber = 2 + $packetIndex * $nbPerPacket;
+                $maxLineNumber = $lineNumber + $nbPerPacket - 1;
+                $rangeUrl = $columnForUrl . $lineNumber . ':' . $columnForUrl . $maxLineNumber;
+                $rangePrice = $columnForPrice . $lineNumber . ':' . $columnForPrice . $maxLineNumber;
+
+                $infosUrl = $ecomSheet->getSheetValue($docId, $rangeUrl, $sheet['title']);
+                $infosPrice = $ecomSheet->getSheetValue($docId, $rangePrice, $sheet['title']);
+
+                if ($infosUrl === null || $infosPrice === null)
                 {
-                    $this->output->writeln('' . $url . ' ' . $actualPrice.' - not modified');
-                    if($columnForDate)
+                    break;
+                }
+
+                $packetIndex++;
+
+                foreach ($infosUrl as $k => $data)
+                {
+                    $infosUrl[$k] = $data[0];
+                }
+                foreach ($infosPrice as $k => $data)
+                {
+                    $infosPrice[$k] = $data[0];
+                }
+                if (count(array_filter($infosUrl)) == 0)
+                {
+                    $continueScanning = false;
+                }
+
+                foreach ($infosUrl as $localIndex => $url)
+                {
+                    $globalLineNumber = $lineNumber + $localIndex;
+                    
+                    $actualPrice = $infosPrice[$localIndex];
+                    //$actualPrice = $ecomSheet->getSheetValue($docId, $columnForPrice . $lineNumber, $sheet['title']);
+
+                    $actualPrice = $ecomPriceSer->formatPrice($actualPrice);
+                    //$url = $ecomSheet->getSheetValue($docId, $columnForUrl . $lineNumber, $sheet['title']);
+                    if (empty($url))
                     {
-                        $ecomSheet->setSheetValue($docId, $columnForDate.$lineNumber, date('Y-m-d H:i:s', $startTime));
+                        break;
                     }
-                }else{
-                    $evol = (round((100*($actualPrice - $newPrice) / $actualPrice)));
-                    $this->output->writeln('' . $url . ' ' . $actualPrice.' => '.$newPrice.' ('.$evol.'%)');
-                    if($evol < 20)
+                    $newPrice = $ecomPriceSer->getPrice($url);
+                    if (empty($newPrice))
                     {
-                        $ecomSheet->setSheetValue($docId, $columnForPrice.$lineNumber, $newPrice);
-                        if($columnForDate)
+                        $this->output->writeln('<error>No price detected for ' . $url . '</error>');
+                    } else
+                    {
+                        if ($newPrice == $actualPrice)
                         {
-                            $ecomSheet->setSheetValue($docId, $columnForDate.$lineNumber, date('Y-m-d H:i:s', $startTime));
+                            $this->output->writeln('' . $url . ' ' . $actualPrice . ' - not modified');
+                            if ($columnForDate)
+                            {
+                                $ecomSheet->setSheetValue($docId, $columnForDate . $globalLineNumber, date('Y-m-d H:i:s', $startTime), $sheet['title']);
+                            }
+                        } else
+                        {
+                            $evol = (round((100 * ($actualPrice - $newPrice) / $actualPrice)));
+                            $this->output->writeln('' . $url . ' ' . $actualPrice . ' => ' . $newPrice . ' (' . $evol . '%)');
+                            if ($evol < 20)
+                            {
+                                $ecomSheet->setSheetValue($docId, $columnForPrice . $globalLineNumber, $newPrice, $sheet['title']);
+                                if ($columnForDate)
+                                {
+                                    $ecomSheet->setSheetValue($docId, $columnForDate . $globalLineNumber, date('Y-m-d H:i:s', $startTime, $sheet['title']));
+                                }
+                            }
                         }
                     }
                 }
+                $this->output->writeln("sheet " . $sheet['title'] . " done");
             }
-            //var_dump($newPrice);
+            
         }
         
         $this->output->writeln("DONE");

@@ -102,6 +102,9 @@ class EcomPrice
             case 'track.effiliation.com':
                 return $this->getPriceFromEffiliation($url);
 
+            case 'www.vieffetrade.eu':
+                return $this->getPriceFromVieffetrade($url);
+
             case 'www.pixmania.fr':
                 //On sait pas faire
                 return null;
@@ -468,6 +471,22 @@ class EcomPrice
 
         return $price;
     }
+
+    protected function getPriceFromVieffetrade($url)
+    {
+        $price = 0;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+        $done = false;
+        $crawler->filter('meta[itemprop="price"]')->each(function ($node) use (& $price){
+            $price = ($node->attr('content'));
+        });
+        $price = $this->formatPrice($price);
+
+        return $price;
+    }
+
 
     protected function getPriceFromEffiliation($url)
     {

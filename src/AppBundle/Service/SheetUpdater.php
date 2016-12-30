@@ -26,8 +26,45 @@ class SheetUpdater
         $this->client = $client;
     }
 
-    public function getSheetValue($spreadsheetId, $cellIdentifier)
+
+    public function getSheets($spreadsheetId)
     {
+        $sheets = array();
+        $try = 0;
+        $maxTry = 10;
+        while ($try < $maxTry)
+        {
+            $try++;
+            try
+            {
+                $client = $this->client->getClient();
+                $service = new \Google_Service_Sheets($client);
+                foreach($service->spreadsheets->get($spreadsheetId)->getSheets() as $sheet)
+                {
+                    $sheets[] = $sheet->getProperties();
+                }
+                return $sheets;
+            }
+            catch(\Exception $e)
+            {
+                echo "\n".$e->getMessage();
+                if($try >= $maxTry)
+                {
+                    throw $e;
+                }
+            }
+            sleep($try);
+        }
+        return $sheets;
+    }
+            
+
+    public function getSheetValue($spreadsheetId, $cellIdentifier, $sheetId = null)
+    {
+        if($sheetId)
+        {
+            $cellIdentifier = $sheetId.'!'.$cellIdentifier;
+        }
         $try = 0;
         $maxTry = 10;
         while($try < $maxTry)
@@ -38,10 +75,15 @@ class SheetUpdater
                 $client = $this->client->getClient();
 
                 $service = new \Google_Service_Sheets($client);
+                $sheets = $service->spreadsheets->get($spreadsheetId)->getSheets();
                 $response = $service->spreadsheets_values->get($spreadsheetId, $cellIdentifier);
                 $values = $response->getValues();
-
-                return $values[0][0];
+                if(strpos($cellIdentifier, ':') === false)
+                {
+                    return $values[0][0];
+                }else{
+                    return $values;
+                }
             }
             catch(\Exception $e)
             {
@@ -55,8 +97,13 @@ class SheetUpdater
         }
     }
 
-    public function setSheetValue($spreadsheetId, $cellIdentifier, $cellValue)
+    public function setSheetValue($spreadsheetId, $cellIdentifier, $cellValue, $sheetId = null)
     {
+        if($sheetId)
+        {
+            $cellIdentifier = $sheetId.'!'.$cellIdentifier;
+        }
+        
         $try = 0;
         $maxTry = 10;
         while($try < $maxTry)
