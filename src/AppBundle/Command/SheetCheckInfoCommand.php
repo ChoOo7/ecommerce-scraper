@@ -187,7 +187,22 @@ class SheetCheckInfoCommand extends ContainerAwareCommand
                 $associations['bruit'] = array("Bruit (dB)");
                 $associations['filtration'] = array("Poussière (Dust)");
                 $associations['sac'] = array("à sac");
-            break;
+                break;
+            case 'machinealaver':
+                //$associations['uri'] = array("Lien pour acheter");
+                $associations['brand'] = array("brand");
+                $associations['model'] = array("model");
+                $associations['ean'] = array("ean");
+                $associations['annualConsumtion'] = array("Conso");
+                //$associations['annualWaterConsumtion'] = array("L/annum");
+                $associations['energyClass'] = array("class");
+                $associations['capacityKg'] = array("Capacité (kg)");
+                $associations['qualiteEssorage'] = array("Efficacité d'essorage");
+                $associations['bruitLavage'] = array("Bruit au lavage (dB)");
+                $associations['bruitEssorage'] = array("Bruit à l'essorage (dB)");
+                $associations['ouverture'] = array("ouverture");
+                $associations['capacityKg'] = array("Capacité (kg)");
+                break;
         }
         return $associations;
     }

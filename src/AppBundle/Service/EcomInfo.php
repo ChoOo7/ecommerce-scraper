@@ -146,7 +146,7 @@ class EcomInfo
                 $infos['ouverture']='dessus';
             }elseif(trim($node->text()) == 'Lave linge hublot')
             {
-                $infos['ouverture']='dessus';
+                $infos['ouverture']='hublot';
             }
         });
         
