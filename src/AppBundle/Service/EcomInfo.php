@@ -107,13 +107,15 @@ class EcomInfo
         $crawler->filter('.product_name')->each(function ($node) use (& $infos)
         {
             $fullName = $node->text();
-
-            $tmp = explode($infos['brand'], $fullName);
-            $tmp = $tmp[1];
-            $tmp = trim($tmp);
-            $tmp = trim($tmp, '-');
-            $tmp = trim($tmp);
-            $infos['model'] = $tmp;
+            if(array_key_exists('brand', $infos))
+            {
+                $tmp = explode($infos['brand'], $fullName);
+                $tmp = $tmp[1];
+                $tmp = trim($tmp);
+                $tmp = trim($tmp, '-');
+                $tmp = trim($tmp);
+                $infos['model'] = $tmp;
+            }
         });
         
         $crawler->filter('#darty_product_brand')->each(function ($node) use (& $infos)

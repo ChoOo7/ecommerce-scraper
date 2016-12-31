@@ -28,6 +28,7 @@ class DefaultController extends Controller
         $root = $this->get('kernel')->getRootDir();
         $command = 'bash '.escapeshellarg($root.'/../bin/flo.sh');
         $command = 'cd '.escapeshellarg($root.'/..').' && timeout 3600 '.$command.' 1>> /tmp/test 2>&1 &';
+        var_dump($command);
         shell_exec($command);
         return $this->redirect($this->generateUrl("homepage"));
     }
