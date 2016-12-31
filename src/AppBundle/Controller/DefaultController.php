@@ -41,7 +41,8 @@ class DefaultController extends Controller
         // replace this example code with whatever you need
         $root = $this->get('kernel')->getRootDir();
         $docId = $request->get('doc');
-        $command = 'php bin/console ecomscraper:sheet:checkinfo --doc '.escapeshellarg($docId);
+        $category = $request->get('category');
+        $command = 'php bin/console ecomscraper:sheet:checkinfo --doc '.escapeshellarg($docId).' --category '.escapeshellarg($category);
         $command = 'cd '.escapeshellarg($root.'/..').' && timeout 3600 '.$command.' 1>> /tmp/test 2>&1 &';
         //var_dump($command);
         shell_exec($command);
