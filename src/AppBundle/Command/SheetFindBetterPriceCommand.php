@@ -51,7 +51,8 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
             $letters = 'abcdefghijklmnopqrstuvwxyz';
             $columnForPrice = null;
             $columnForUrl = null;
-            $columnForEan= null;
+            $columnForEan = null;
+            $columnForModel = null;
             $headers = $ecomSheet->getSheetValue($docId, "A1:Z1", $sheet['title']);
             $headers = $headers[0];
             
@@ -69,8 +70,11 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
                 } elseif ($value == "ean")
                 {
                     $columnForEan = $letter;
+                } elseif ($value == "model")
+                {
+                    $columnForModel = $letter;
                 }
-                if ($columnForUrl && $columnForPrice && $columnForEan)
+                if ($columnForUrl && $columnForPrice && $columnForEan && $columnForModel)
                 {
                     break;
                 }
@@ -83,6 +87,10 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
             if (empty($columnForEan))
             {
                 throw new \Exception("Unable to find ean column");
+            }
+            if (empty($columnForModel))
+            {
+                throw new \Exception("Unable to find model column");
             }
             if (empty($columnForUrl))
             {
@@ -98,10 +106,12 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
                 $maxLineNumber = $lineNumber + $nbPerPacket - 1;
                 $rangeUrl = $columnForUrl . $lineNumber . ':' . $columnForUrl . $maxLineNumber;
                 $rangeEan = $columnForEan . $lineNumber . ':' . $columnForEan . $maxLineNumber;
+                $rangeModel = $columnForModel . $lineNumber . ':' . $columnForModel . $maxLineNumber;
                 $rangePrice = $columnForPrice . $lineNumber . ':' . $columnForPrice . $maxLineNumber;
 
                 $infosUrl = $ecomSheet->getSheetValue($docId, $rangeUrl, $sheet['title']);
                 $infosEan = $ecomSheet->getSheetValue($docId, $rangeEan, $sheet['title']);
+                $infosModel = $ecomSheet->getSheetValue($docId, $rangeModel, $sheet['title']);
                 $infosPrice = $ecomSheet->getSheetValue($docId, $rangePrice, $sheet['title']);
 
                 if ($infosEan === null)
@@ -114,6 +124,11 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
                 foreach ($infosEan as $k => $data)
                 {
                     $infosEan[$k] = $data[0];
+                }
+
+                foreach ($infosModel as $k => $data)
+                {
+                    $infosModel[$k] = $data[0];
                 }
                 if( ! is_array($infosPrice))
                 {
@@ -134,9 +149,10 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
                     
                     $actualPrice = array_key_exists($localIndex, $infosPrice) ? $infosPrice[$localIndex] : 99999;
                     $ean = $infosEan[$localIndex];
+                    $model = $infosModel[$localIndex];
                     if( ! array_key_exists($ean, $eanBestPrices) || $eanBestPrices[$ean]['actualBestPrice'] >= $actualPrice)
                     {
-                        $eanBestPrices[$ean] = array('actualBestPrice'=>$actualPrice, 'line'=>$globalLineNumber, 'sheet'=>$sheet['title']);
+                        $eanBestPrices[$ean] = array('actualBestPrice'=>$actualPrice, 'line'=>$globalLineNumber, 'model'=>$model, 'sheet'=>$sheet['title']);
                     }
                 }
                 $this->output->writeln("sheet " . $sheet['title'] . " done");
@@ -159,7 +175,7 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
                 $thePrice = (float)$thePrice;
                 if($thePrice < $actualBestPrice)
                 {
-                    $errorMsg = 'Onglet '.$lineInfos['sheet'].' Ligne '.$lineInfos['line'].' - better price detected '.$actualBestPrice.' => '.$thePrice.'  - '.$provider.' - '. $url . '';
+                    $errorMsg = 'Onglet '.$lineInfos['sheet'].' Ligne '.$lineInfos['line'].' - '.$lineInfos['model'].' better price detected '.$actualBestPrice.' => '.$thePrice.'  - '.$provider.' - '. $url . '';
                     $this->errors[] = $errorMsg;
                     $this->output->writeln($errorMsg);
                 }

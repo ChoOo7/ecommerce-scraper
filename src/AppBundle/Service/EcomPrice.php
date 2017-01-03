@@ -157,9 +157,7 @@ class EcomPrice
         $crawler->filter('.product_metas  .darty_prix')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
-        $price = str_replace('€', '', $price);
-        $price = str_replace(',', '.', $price);
-        $price = (float) $price;
+        $price = $this->formatPrice($price);
 
         return $price;
     }

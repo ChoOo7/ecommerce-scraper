@@ -26,13 +26,16 @@ class EcomInfo
      */
     protected $ecomPriceService;
     
+    protected $ecomAffiSer;
+    
     /**
      * EcomInfo constructor.
      * @param EcomPrice $ecomPrice
      */
-    public function __construct(EcomPrice $ecomPrice)
+    public function __construct(EcomPrice $ecomPrice, EcomAffiliation $ecomAffiSer)
     {
         $this->ecomPriceService = $ecomPrice;
+        $this->ecomAffiSer = $ecomAffiSer;
     }
 
     /**
@@ -84,6 +87,13 @@ class EcomInfo
                     }
                     $infos[$k][$provider] = $v;
                 }
+            }
+        }
+        if(array_key_exists('uri', $infos))
+        {
+            foreach($infos['uri'] as $provider=>$url)
+            {
+                $infos['uri'][$provider] = $this->ecomAffiSer->getNewUrl($url);
             }
         }
         return $infos;
@@ -256,7 +266,6 @@ class EcomInfo
         });
         if($productType == 'machinealaver')
         {
-            
             $crawler->filter('#filAriane span a')->each(function ($node) use (& $infos){
                 if($node->text() == 'Lave-linge top')
                 {
@@ -266,7 +275,6 @@ class EcomInfo
                     $infos['ouverture']='hublot';
                 }
             });
-            
         }
 
         if($crawler->getUri() != $url)
@@ -484,7 +492,7 @@ class EcomInfo
         }
         $model = array_shift($models);
         $url = array_shift($parametersInfos['uri']);
-        $url = 'http://search.rueducommerce.fr/search?s='.urlencode($brand.'-'.$model).'';
+        $url = 'http://search.rueducommerce.fr/search?s='.urlencode($model).'';
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
@@ -509,6 +517,12 @@ class EcomInfo
 
             $client = new \Goutte\Client();
             $crawler = $client->request('GET', $newUrl);
+            
+            $textContent = $crawler->text();
+            if(stripos($textContent, $brand) === false || stripos($textContent, $model) === false)
+            {
+                return null;
+            }
         }
 
         $crawler->filter('#blocAttributesContent tr')->each(function ($node) use (& $infos){
@@ -567,7 +581,7 @@ class EcomInfo
         }
         $model = array_shift($models);
         $url = array_shift($parametersInfos['uri']);
-        $url = 'http://www.cdiscount.com/search/10/'.urlencode($model.' '.$brand).'.html#_his_';
+        $url = 'http://www.cdiscount.com/search/10/'.urlencode($model).'.html#_his_';
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
@@ -621,8 +635,17 @@ class EcomInfo
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
         });
 
-
         $infos['uri'] = $crawler->getUri();
+        if($productType == 'four')
+        {
+            if(stripos($infos['uri'], 'encastrable') !== false)
+            {
+                $infos['fourType'] = 'encastrable';
+            }
+        }
+
+
+        
         $price = $this->ecomPriceService->getPrice($infos['uri']);
         if($price)
         {
@@ -667,7 +690,11 @@ class EcomInfo
             {
                 return null;
             }
-            var_dump($newUrl);
+
+            if ($newUrl == null || stripos($newUrl, $brand) === false  || stripos($newUrl, $model) === false)
+            {
+                return null;
+            }
 
             $client = new \Goutte\Client();
             $crawler = $client->request('GET', $newUrl);
@@ -706,7 +733,6 @@ class EcomInfo
         $infos = array();
 
         $url = 'https://www.google.fr/search?q='.urlencode($ean);
-        var_dump($url);
 
         $client = new \Goutte\Client();
         $client->setHeader('User-Agent', "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36");
@@ -788,6 +814,10 @@ class EcomInfo
         $textLabel = trim($textLabel);
         $textLabel = trim($textLabel, ':');
         $textLabel = trim($textLabel);
+        $textLabel = trim($textLabel, chr(160));
+        $textLabel = trim($textLabel, chr(194));
+        $textLabel = trim($textLabel, ':');
+        $textLabel = trim($textLabel);
         $value = trim($value);
         
         if($textLabel == 'Essorage' && stripos($value, 'db')!== false)
@@ -834,6 +864,7 @@ class EcomInfo
             case 'Coût estimé d\'utilisation (eau + électricité)':
             case 'Coût annuel Lavage':
             case 'Coût annuel d\'utilisation (basé sur 220 cycles de lavage par an)':
+            case 'Coût estimé d\'utilisation':
                 $infos['annualCost'] = $this->cleanAnnualCost($value);
                 break;
             case 'Consommation d\'énergie annuelle':
@@ -843,7 +874,8 @@ class EcomInfo
             case 'Lavage annuelle':
             case 'Consommation électrique annuelle':
             case 'Consommation d\'énergie':
-            
+            case 'Consommation d\'énergie (Norme EN 153)':
+            case 'Consommation d\'énergie annuelle (en kWh)':
                 $infos['annualConsumtion'] = $this->cleanAnnualConsumtion($value);
                 break;
             case 'Consommation d\'eau en lavage':
@@ -864,9 +896,21 @@ class EcomInfo
                 $infos['bruit'] = $this->cleanBruit($value);
                 break;
             case 'Contenance':
+            case 'Contenance':
+            case 'Capacité':
                 $infos['volume'] = $this->cleanVolume($value);
                 break;
+            case 'Volume utile du réfrigérateur':
+            case 'Volume utile':
+            case 'Volume réfrigérateur':
+                $infos['volumeFridge'] = $this->cleanVolume($value);
+                break;
+            case 'Volume utile du congélateur':
+            case 'Volume congélateur':
+                $infos['volumeFreezer'] = $this->cleanVolume($value);
+                break;
             case 'Largeur (cm)':
+            case 'Largeur d\'encastrement (cm)': 
             case 'Type de lave vaisselle':
                 $infos['largeur'] = $this->cleanLargeur($value);
                 break;
@@ -887,10 +931,16 @@ class EcomInfo
             case 'Puissance':
                 $infos['puissance'] = $this->cleanPuissance($value);
                 break;
+            
+            case 'Système de nettoyage':
+                $infos['fourNettoyage'] = $this->cleanFourNettoyage($value);
+                break;
+            
             case 'Modèle':
             case 'Code':
             //case 'Référence':
             case 'Numéro du modèle de l\'article':
+            case 'Référence constructeur':
                 if($value != $infos['ean'])
                 {
                     $infos['model'] = $value;
@@ -908,6 +958,14 @@ class EcomInfo
                 $infos['vitesseEssorage'] = $this->cleanSpeed($value);
                 break;
 
+            case 'Consommation en convection classique':
+                $infos['classicalConsumtion'] = $this->cleanPuissance($value);
+                break;
+
+            case 'Consommation en convection forcée':
+                $infos['forcedConsumtion'] = $this->cleanPuissance($value);
+                break;
+
             case 'Qualité d\'essorage':
             case 'Classe d\'efficacité à l\'essorage':
             case 'Classe efficacité Essorage':
@@ -920,6 +978,19 @@ class EcomInfo
             case 'Efficacité de séchage':
                 $infos['qualiteSechage'] = $this->cleanEnergyClass($value);
                 break;
+            
+            case 'Classe d\'efficacité fluidodynamique (efficacité de l\'aspiration)':
+                $infos['energyClassAspiration'] = $this->cleanEnergyClass($value);
+                break;
+
+            case 'Classe d\'efficacité lumineuse':
+                $infos['energyClassLight'] = $this->cleanEnergyClass($value);
+                break;
+            
+            case 'Classe d\'efficacité de filtration des graisses':
+                $infos['energyClassGraisse'] = $this->cleanEnergyClass($value);
+                break;
+                
             
             case 'Capacité de lavage':
             case 'Capacité maximale au lavage':
@@ -963,6 +1034,15 @@ class EcomInfo
                 }
                 break;
             default:
+                /*
+                var_dump($textLabel);
+                for($i=0;$i<strlen($textLabel);$i++)
+                {
+                    //var_dump(ord($textLabel{$i}));
+                }
+                var_dump($textLabel{strlen($textLabel)-1});
+                var_dump(ord($textLabel{strlen($textLabel)-1}));
+                */
                 //var_dump($textLabel.' : '.$value);
         }
         return $infos;
@@ -994,9 +1074,10 @@ class EcomInfo
         $tmp = explode('-', $value);
         $value = $tmp[0];
         $value = str_ireplace('to d', '', $value);
-        $value = str_ireplace('toG', '', $value);
+        $value = str_ireplace('to G', '', $value);
         $value = trim($value);
         $value = str_replace(' ', '', $value);
+        $value = str_ireplace('toG', '', $value);
         return $value;
     }
 
@@ -1053,12 +1134,19 @@ class EcomInfo
         return $value;
     }
 
+    protected function cleanFourNettoyage($value)
+    {
+        $value = str_ireplace('a ', '', $value);
+        $value = trim($value);
+        $value = strtolower($value);
+        return $value;
+    }
     protected function cleanLargeur($value)
     {
         $value = str_ireplace('cm', '', $value);
         $value = trim($value);
         $value = (float)($value);
-        if($value > 59 && $value < 61)
+        if($value >= 59 && $value <= 61)
         {
             $value = 60;
         }

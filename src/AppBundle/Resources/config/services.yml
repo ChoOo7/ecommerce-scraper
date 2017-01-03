@@ -9,6 +9,7 @@ services:
       class: AppBundle\Service\EcomInfo
       arguments:
           - "@ecom.price"
+          - "@ecom.affiliation"
   ecom.affiliation: 
       arguments: 
       class: AppBundle\Service\EcomAffiliation    

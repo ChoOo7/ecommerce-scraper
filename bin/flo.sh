@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /var/local_www/ecommerce-scraper/
+#cd /var/local_www/ecommerce-scraper/
 EMAIL=""
 
 echo "DOC 1"
