@@ -233,7 +233,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                         {
                             if($newPrice)
                             {
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from '.$actualPrice.' to '.$newPrice;
+                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from '.$actualPrice.' to '.$newPrice.' on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$readedInfos['uri'][$localIndex].'</a>';
                                 $this->errors[] = $errorMessage;
                                 $this->output->writeln($errorMessage);
 
@@ -242,7 +242,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                             }else{
                                 if($doRemovePrice)
                                 {
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected, we remove link and price';
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url '.$readedInfos['uri'][$localIndex].', we remove link and price';
 
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
@@ -255,7 +255,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $column = $columnIndexes['uri'];
                                     $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '');
                                 }else{
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected';
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$readedInfos['uri'][$localIndex].'</a>';
 
                                     $columnPrice = $columnIndexes['price'];
                                     $columnUri = $columnIndexes['uri'];

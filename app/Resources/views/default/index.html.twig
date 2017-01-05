@@ -6,20 +6,34 @@
             <div id="welcome">
                 <h1>Ecom-scrapper</h1>
             </div>
+            <div>
+                <h2>Mettre à jour les données</h2>
+            </div>
             <div class="actions">
-                <a href="{{ path('updateprice') }}">
-                    Mettre à jour les prix
+                <a href="{{ path('updateinfo') }}">
+                    Lancer la tache checkant tous les produits (lancé en auto toutes les nuits)
                 </a>
                 <hr />
-                <a href="{{ path('checkinfo', {doc: '1YTys0LNJt4OgHzDErSP_TTtzA49_9yxMhqILDph2_VA', category: 'aspirateur'}) }}">
-                    Checker les infos des aspirateurs
-                </a>
-                <hr />
-                <a href="{{ path('checkinfo', {doc: '1msHBIiyGUy42dVKl1ddXwJ6d7y_7WqZm9oht4VBPhf8', category: 'machinealaver'}) }}">
-                    Checker les infos des machines à laver
-                </a>
-                <hr />
-                <h2>Find informations</h2>
+                {% for docId, docName in docs %}
+                    <a href="{{ path('updateinfo', {doc: docId, category: docName}) }}">
+                        MAJ les infos des {{ docName }}
+                    </a>
+                    <hr />
+                {% endfor %}
+            </div>
+            <div>
+                <h2>Vérifier toutes les données</h2>
+            </div>
+            <div class="actions">
+                {% for docId, docName in docs %}
+                    <a href="{{ path('checkinfo', {doc: docId, category: docName}) }}">
+                        Vérifier les infos des {{ docName }}
+                    </a>
+                    <hr />
+                {% endfor %}
+            </div>
+            <div>
+                <h2>Search informations</h2>
                 <form method="GET" action="{{ path('findinfo') }}">
                     <div class="form-row">
                         <label for="find_category">
@@ -44,9 +58,7 @@
                     <h3>Resultat</h3>
                     {{ output|raw }}
                 {% endif %}
-
             </div>
-
         </div>
     </div>
 {% endblock %}

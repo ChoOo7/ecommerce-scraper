@@ -13,20 +13,39 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
+        $docs = array(
+            '1YTys0LNJt4OgHzDErSP_TTtzA49_9yxMhqILDph2_VA'=>'aspirateur',
+            '1PH9YEDFrLwb9S7ZdQq2M2vf9zPSNA1zbH6ODeQED7Qo'=>'frigo',
+            '1msHBIiyGUy42dVKl1ddXwJ6d7y_7WqZm9oht4VBPhf8'=>'machinealaver',
+            '1y55KqgfbhdBPJMmWPIiV_Qj7NW_PyB8mbNmIkg0hyH8'=>'four',
+            '1mKW8TpOcdkI5SZEUs6GKNvCyGf0_rLnZpfSjU-ByEeI'=>'lavevaisselle',
+            '1kPU2EW5A08yR1UXdwLn5sXytdoRxbIrPsQGpVJwtwSc'=>'pneu',
+            '1D3hHX0Eux_TQR9QIsNKMRLmW2fxfEJORwT7_2HKJ59E'=>'hotte',
+            '1WrQTglh9hLpYC2pL9Y9GYKNkMj28a1zOgw0JzEeKfzQ'=>'radiateur'
+        );
+        
         // replace this example code with whatever you need
         return $this->render('default/index.html.twig', [
           'base_dir' => realpath($this->getParameter('kernel.root_dir').'/..').DIRECTORY_SEPARATOR,
+          'docs'=>$docs
         ]);
     }
 
     /**
-     * @Route("/updateprice", name="updateprice")
+     * @Route("/updateinfo", name="updateinfo")
      */
-    public function updatepriceAction(Request $request)
+    public function updateinfoAction(Request $request)
     {
         // replace this example code with whatever you need
         $root = $this->get('kernel')->getRootDir();
-        $command = 'bash '.escapeshellarg($root.'/../bin/flo.sh');
+        $docId = $request->get('doc');
+        $command = null;
+        if($docId)
+        {
+            $command = 'php bin/console ecomscraper:sheet:update --doc '.escapeshellarg($docId);
+        }else{
+            $command = 'bash '.escapeshellarg($root.'/../bin/flo.sh');
+        }
         $command = 'cd '.escapeshellarg($root.'/..').' && timeout 3600 '.$command.' 1>> /tmp/test 2>&1 &';
         var_dump($command);
         shell_exec($command);
@@ -41,8 +60,7 @@ class DefaultController extends Controller
         // replace this example code with whatever you need
         $root = $this->get('kernel')->getRootDir();
         $docId = $request->get('doc');
-        $category = $request->get('category');
-        $command = 'php bin/console ecomscraper:sheet:checkinfo --doc '.escapeshellarg($docId).' --category '.escapeshellarg($category);
+        $command = 'php bin/console ecomscraper:sheet:update --checkinfo true --doc '.escapeshellarg($docId);
         $command = 'cd '.escapeshellarg($root.'/..').' && timeout 3600 '.$command.' 1>> /tmp/test 2>&1 &';
         //var_dump($command);
         shell_exec($command);
