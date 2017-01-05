@@ -101,14 +101,14 @@ class EcomInfo
     
     protected function getProvidersOfType($productType)
     {
-        //TODO : gérer eanfinder.com
         switch($productType)
         {
             case 'pneu':
-                return array('AlloPneus');
+                return array();
+//                return array('AlloPneus');
 
             default:
-                return array('Darty', 'Boulanger', 'WebDistrib', 'Amazon', 'RueDuCommerce', 'CDiscount', 'Arredatutto', 'ElectroMenagerCompare');
+                return array('Darty', 'EanFind', 'EanSearch', 'IdealPrice', 'VillaTech', 'Boulanger', 'EanFind', 'WebDistrib', /*'Amazon', */'ElectroDepot', 'RueDuCommerce', 'TousPourUnPrix', 'PriceMinister', 'MisterGoodDeal', 'CDiscount', 'Arredatutto', 'Conforama', 'ElectroMenagerCompare', 'Ubaldi');
         }
         return array();
     }
@@ -118,7 +118,8 @@ class EcomInfo
         $infos = array();
         $infos['ean'] = $ean;
 
-        $url = 'http://www.darty.com/nav/recherche?text='.urlencode($ean);
+        $url = $searchUrl = 'http://www.darty.com/nav/recherche?text='.urlencode($ean);
+        $searchUrl2 = 'http://www.darty.com/nav/recherche/'.urlencode($ean).'.html';
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
@@ -140,18 +141,18 @@ class EcomInfo
                 $infos['model'] = $tmp;
             }
         });
-        
+
         $crawler->filter('#darty_product_brand')->each(function ($node) use (& $infos)
         {
             $infos['brand'] = $brand = $node->text();
             $fullName = $node->parents()->eq(0)->text();
-            
+
             $tmp = explode($brand, $fullName);
             $tmp = $tmp[1];
             $tmp = trim($tmp);
             $tmp = trim($tmp, '-');
             $tmp = trim($tmp);
-            
+
             if(strpos($tmp, strtoupper($brand)) !== false)
             {
                 $tmp = explode(strtoupper($brand), $fullName);
@@ -160,8 +161,8 @@ class EcomInfo
                 $tmp = trim($tmp, '-');
                 $tmp = trim($tmp);
             }
-            
-            $infos['model'] = $tmp; 
+
+            $infos['model'] = $tmp;
         });
 
         $crawler->filter('.product_family')->each(function ($node) use (& $infos)
@@ -181,12 +182,12 @@ class EcomInfo
                 $infos['pose']='Pose libre';
             }
         });
-        
+
         $crawler->filter('.product_details_item')->each(function ($node) use (& $infos){
             $textNode = $node->text();
             $tmp = explode(':', $textNode);
             $tmp[0] = trim($tmp[0]);
-            
+
             if(stripos($textNode, "Classe d'efficacité énergétique") !== false)
             {
                 $value = trim($tmp[1]);
@@ -219,13 +220,150 @@ class EcomInfo
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
         });
 
-        $infos['uri'] = $crawler->getUri();
-        $price = $this->ecomPriceService->getPrice($infos['uri']);
-        if($price)
+        if($searchUrl != $crawler->getUri() && $searchUrl2 != $crawler->getUri())
         {
-            $infos['price'] = $price;
+            $infos['uri'] = $crawler->getUri();
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
         }
 
+        return $infos;
+    }
+
+    protected function getInfosOfFromVillaTech($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $url = $searchUrl = 'http://www.villatech.fr/catalogsearch/result/?q='.urlencode($ean);
+        $newUrl = null;
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+
+        if($crawler->getUri() == $url)
+        {
+            $newUrl = null;
+            $done = false;
+            $crawler->filter('.product-listing-ajax-container a')->eq(0)->each(function ($node) use (& $newUrl)
+            {
+                $newUrl = $node->attr('href');
+            });
+            if($newUrl && $newUrl{0} == '/')
+            {
+                $newUrl = 'http://www.villatech.fr'.$newUrl;
+            }
+            if ($newUrl == null)
+            {
+                return null;
+            }
+
+            $client = new \Goutte\Client();
+            $crawler = $client->request('GET', $newUrl);
+        }
+
+        $crawler->filter('[itemprop="brand"] span')->eq(0)->each(function ($node) use (& $infos)
+        {
+            $infos['brand'] = $node->text();
+        });
+        $crawler->filter('h1 > span')->eq(1)->each(function ($node) use (& $infos)
+        {
+            $infos['model'] = $node->text();
+        });
+
+
+
+        $crawler->filter('#caracteristiques tr')->each(function ($node) use (& $infos, $productType){
+
+            $textLabel = null;
+            $value = null;
+            $index = 0;
+            $node->filter('td')->each(function($subNode) use (&$textLabel, & $value, &$index, $productType) {
+                if($index == 0)
+                {
+                    $textLabel = trim($subNode->text());
+                }else{
+                    $value = trim($subNode->text());
+                }
+                $textLabel = trim($textLabel);
+                $index++;
+            });
+            $textLabel = trim(str_replace('Aide', '', $textLabel));
+
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
+
+        if($newUrl)
+        {
+            $infos['uri'] = $crawler->getUri();
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+
+        return $infos;
+    }
+
+    protected function getInfosOfFromEanFind($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $url = 'https://www.eanfind.fr/chercher/' . urlencode($ean);
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+        $crawler->filter('#brand')->each(function ($node) use (& $infos){
+            $infos['brand'] = $node->attr('value');
+        });
+        $crawler->filter('a[itemprop="brand"]')->each(function ($node) use (& $infos){
+            $infos['brand'] = $node->text();
+        });
+        return $infos;
+    }
+    
+    protected function getInfosOfFromEanSearch($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+        
+        $brand = array_key_exists('brand', $parametersInfos) ? $parametersInfos['brand'] : null;
+        if(empty($brand))
+        {
+            return null;
+        }
+        $brand = array_shift($brand);
+
+        $url = 'https://www.ean-search.org/perl/ean-search.pl?q=' . urlencode($ean);
+
+        $stack = new \GuzzleHttp\HandlerStack();
+        $stack->setHandler(new \GuzzleHttp\Handler\CurlHandler());
+        $stack->push(\GuzzleTor\Middleware::tor());
+        $torGuzzleClient = new \GuzzleHttp\Client(['handler' => $stack]);
+
+        $client = new \Goutte\Client();
+        $client->setClient($torGuzzleClient);
+        $client->setHeader('User-Agent', "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36".rand());
+        $crawler = $client->request('GET', $url);
+        
+        $label = null;
+        $crawler->filter('#main a')->eq(0)->each(function ($node) use (& $label){
+            $label = $node->text();
+        });
+        $tmp = preg_split('!'.$brand.'!i', $label);
+        if(array_key_exists(1, $tmp))
+        {
+            $infos['model'] = trim($tmp[1]);
+        }else{
+            return null;
+        }
         return $infos;
     }
 
@@ -233,7 +371,7 @@ class EcomInfo
     {
         $infos = array();
         $infos['ean'] = $ean;
-        
+
         $url = 'http://www.boulanger.com/resultats?tr='.urlencode($ean);
 
         $client = new \Goutte\Client();
@@ -242,26 +380,35 @@ class EcomInfo
         $crawler->filter('span[itemprop="brand"]')->each(function ($node) use (& $infos){
             $infos['brand'] = $node->text();
         });
-        
+
         $crawler->filter('img[itemprop="image"]')->each(function ($node) use (& $infos){
             $infos['model'] = trim(str_replace($infos['brand'], '', $node->attr("alt")));
         });
-        
-        $crawler->filter('table.characteristic tr')->each(function ($node) use (& $infos){
+
+        $crawler->filter('table.characteristic tr')->each(function ($node) use (& $infos, $productType){
 
             $textLabel = null;
             $value = null;
             $index = 0;
-            $node->filter('td')->each(function($subNode) use (&$textLabel, & $value, &$index) {
+            $node->filter('td')->each(function($subNode) use (&$textLabel, & $value, &$index, $productType) {
                 if($index == 0)
                 {
                     $textLabel = trim($subNode->text());
                 }else{
                     $value = trim($subNode->text());
                 }
+                $textLabel = trim($textLabel);
+                if($textLabel == "Volume utile" && $productType == "frigo")
+                {
+                    $tbody = $subNode->parents('tbody')->eq(0);
+                    $previousCatName = $tbody->parents()->previousAll()->text();
+                    $previousCatName = trim($previousCatName);
+                    $textLabel = "Volume utile ".$previousCatName;
+                }
                 $index++;
             });
             $textLabel = trim(str_replace('Aide', '', $textLabel));
+            
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
         });
         if($productType == 'machinealaver')
@@ -276,6 +423,300 @@ class EcomInfo
                 }
             });
         }
+
+        if($crawler->getUri() != $url)
+        {
+            $infos['uri'] = $crawler->getUri();
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+
+        return $infos;
+    }
+
+
+    protected function getInfosOfFromMisterGoodDeal($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $url = 'http://www.mistergooddeal.com/nav/recherche?srctype=list&text='.urlencode($ean);
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+        $crawler->filter('#carac_product li')->each(function ($node) use (& $infos, $parametersInfos){
+
+            $textLabel = null;
+            $value = null;
+            $index = 0;
+            $node->filter('div.label')->each(function($subNode) use (&$textLabel) {
+                $textLabel = trim($subNode->text());
+            });
+            $node->filter('div.value')->each(function($subNode) use (&$value) {
+                $value = trim($subNode->text());
+            });
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value, $parametersInfos);
+        });
+
+        if($crawler->getUri() != $url)
+        {
+            $infos['uri'] = $crawler->getUri();
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+
+        return $infos;
+    }
+
+    protected function getInfosOfFromConforama($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $model = array_key_exists('model', $parametersInfos) ? $parametersInfos['model'] : null;
+        if( empty($model) )
+        {
+            return null;
+        }
+        $model = array_shift($model);
+
+        $modelForSearch = str_replace('/', urlencode('/'), $model);
+        $url = 'http://www.conforama.fr/recherche-conforama/'.rawurlencode($modelForSearch);
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+
+        if($crawler->getUri() == $url)
+        {
+            $newUrl = null;
+            $done = false;
+            $crawler->filter('#contentSegment .containerOneProdList h3.itemTitle a')->eq(0)->each(function ($node) use (& $newUrl)
+            {
+                $newUrl = $node->attr('href');
+            });
+            if($newUrl && $newUrl{0} == '/')
+            {
+                $newUrl = 'http://www.conforama.fr'.$newUrl;
+            }
+            if ($newUrl == null)
+            {
+                return null;
+            }
+
+            if( ! $this->urlMatchModel($newUrl, $model))
+            {
+                return null;
+            }
+
+            $client = new \Goutte\Client();
+            $crawler = $client->request('GET', $newUrl);
+        }
+
+
+        $crawler->filter('.productSpecifications tr')->each(function ($node) use (& $infos){
+
+            $textLabel = null;
+            $value = null;
+            $index = 0;
+            $node->filter('.productSpecificationsLabel')->each(function($subNode) use (&$textLabel) {
+                $textLabel = trim($subNode->text());
+            });
+            $node->filter('.productSpecificationsValue')->each(function($subNode) use (&$value) {
+                $value = trim($subNode->text());
+            });
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
+
+        if($crawler->getUri() != $url)
+        {
+            $infos['uri'] = $crawler->getUri();
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+
+        return $infos;
+    }
+
+    protected function getInfosOfFromTousPourUnPrix($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $model = array_key_exists('model', $parametersInfos) ? $parametersInfos['model'] : null;
+        if( empty($model) )
+        {
+            return null;
+        }
+        $model = array_shift($model);
+
+        $url = 'https://www.touspourunprix.fr/recherche-resultats.php?search_in_description=1&ac_keywords='.urlencode($model);
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+
+        if($crawler->getUri() == $url)
+        {
+            $newUrl = null;
+            $done = false;
+            $crawler->filter('.module_centre_listeproduits_milieu a')->eq(0)->each(function ($node) use (& $newUrl)
+            {
+                $newUrl = $node->attr('href');
+            });
+            if($newUrl && $newUrl{0} == '/')
+            {
+                $newUrl = 'https://www.touspourunprix.fr'.$newUrl;
+            }
+            if ($newUrl == null)
+            {
+                return null;
+            }
+            if( ! $this->urlMatchModel($newUrl, $model))
+            {
+                return null;
+            }
+
+            $client = new \Goutte\Client();
+            $crawler = $client->request('GET', $newUrl);
+        }
+
+
+        $crawler->filter('.productSpecifications tr')->each(function ($node) use (& $infos){
+
+            $textLabel = null;
+            $value = null;
+            $index = 0;
+            $node->filter('.productSpecificationsLabel')->each(function($subNode) use (&$textLabel) {
+                $textLabel = trim($subNode->text());
+            });
+            $node->filter('.productSpecificationsValue')->each(function($subNode) use (&$value) {
+                $value = trim($subNode->text());
+            });
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
+
+        if($crawler->getUri() != $url)
+        {
+            $infos['uri'] = $crawler->getUri();
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+
+        return $infos;
+    }
+
+    protected function getInfosOfFromPriceMinister($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $url = 'http://www.priceminister.com/s/'.urlencode($ean);
+
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+
+        if($crawler->getUri() == $url)
+        {
+            $newUrl = null;
+            $done = false;
+            $crawler->filter('#productCtn .navByList .productNav a')->eq(0)->each(function ($node) use (& $newUrl)
+            {
+                $newUrl = $node->attr('href');
+            });
+            if($newUrl && $newUrl{0} == '/')
+            {
+                $newUrl = 'http://www.priceminister.com/'.$newUrl;
+            }
+            if ($newUrl == null)
+            {
+                return null;
+            }
+
+            if ($newUrl == null)
+            {
+                return null;
+            }
+
+            $client = new \Goutte\Client();
+            $crawler = $client->request('GET', $newUrl);
+        }
+
+        if($crawler->getUri() != $url)
+        {
+            $infos['uri'] = $crawler->getUri();
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+
+        return $infos;
+    }
+
+
+    protected function getInfosOfFromElectroDepot($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $url = 'http://www.electrodepot.fr/Antidot/Front_Search/Suggest/?q='.urlencode($ean);
+
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+
+        if($crawler->getUri() == $url)
+        {
+            $newUrl = null;
+            $done = false;
+            $crawler->filter('a')->eq(0)->each(function ($node) use (& $newUrl)
+            {
+                $newUrl = $node->attr('href');
+            });
+            if($newUrl && $newUrl{0} == '/')
+            {
+                $newUrl = 'http://www.electrodepot.fr/'.$newUrl;
+            }
+            if ($newUrl == null)
+            {
+                return null;
+            }
+
+            $client = new \Goutte\Client();
+            $crawler = $client->request('GET', $newUrl);
+        }
+
+
+        $crawler->filter('#div-description tr')->each(function ($node) use (& $infos){
+            $textLabel = null;
+            $value = null;
+            $index = 0;
+            $node->filter('td.titre')->each(function($subNode) use (&$textLabel, & $value, &$index) {
+                $textLabel = trim($subNode->text());
+            });
+            $node->filter('td.valeur')->each(function($subNode) use (&$textLabel, & $value, &$index) {
+                $value = trim($subNode->text());
+            });
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
 
         if($crawler->getUri() != $url)
         {
@@ -345,25 +786,38 @@ class EcomInfo
     }
 
 
-    protected function getInfosOfFromAmazon($ean, $productType, $parametersInfos)
+    protected function getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft = 5)
     {
         $infos = array();
         $infos['ean'] = $ean;
 
+        $stack = new \GuzzleHttp\HandlerStack();
+        $stack->setHandler(new \GuzzleHttp\Handler\CurlHandler());
+        $stack->push(\GuzzleTor\Middleware::tor());
+        $torGuzzleClient = new \GuzzleHttp\Client(['handler' => $stack]);
+
         $url = 'https://www.amazon.fr/s/ref=nb_sb_noss?__mk_fr_FR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&url=search-alias%3Daps&field-keywords='.urlencode($ean);
 
         $client = new \Goutte\Client();
+        $client->setClient($torGuzzleClient);
+        $client->setHeader('User-Agent', "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36");
         $crawler = $client->request('GET', $url);
-
         $newUrl = null;
         $crawler->filter('#result_0 a')->eq(0)->each(function ($node) use (& $newUrl){
             $newUrl = $node->attr('href');
         });
+        if($newUrl == null && $tryLeft > 0)
+        {
+            sleep(6-$tryLeft);
+            $tryLeft--;
+            return $this->getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft);
+        }
         if($newUrl == null)
         {
             return null;
         }
 
+        sleep(rand(0,3));
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $newUrl);
 
@@ -523,6 +977,10 @@ class EcomInfo
             {
                 return null;
             }
+            if(stripos($crawler->getUri(), 'search_retry') !== false)
+            {
+                return null;
+            }
         }
 
         $crawler->filter('#blocAttributesContent tr')->each(function ($node) use (& $infos){
@@ -654,6 +1112,7 @@ class EcomInfo
 
         return $infos;
     }
+
     protected function getInfosOfFromArredatutto($ean, $productType, $parametersInfos)
     {
         $infos = array();
@@ -691,7 +1150,7 @@ class EcomInfo
                 return null;
             }
 
-            if ($newUrl == null || stripos($newUrl, $brand) === false  || stripos($newUrl, $model) === false)
+            if ( ! $this->urlMatchModel($newUrl, $model))
             {
                 return null;
             }
@@ -701,7 +1160,7 @@ class EcomInfo
         }
 
 
-        $crawler->filter('div.DetailsTitle.div_specifiche')->each(function ($node) use (& $infos){
+        $crawler->filter('.liste-specs .ls-ligne')->each(function ($node) use (& $infos){
 
             $textLabel = null;
             $value = null;
@@ -711,11 +1170,121 @@ class EcomInfo
             {
                 $value = $subNode->text();
             });
-            $textLabel = str_replace($value, '', $node->text()); 
+            $textLabel = str_replace($value, '', $node->text());
             $textLabel = trim(str_replace('Aide', '', $textLabel));
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
         });
 
+
+        $infos['uri'] = $crawler->getUri();
+        $price = $this->ecomPriceService->getPrice($infos['uri']);
+        if($price)
+        {
+            $infos['price'] = $price;
+        }
+
+        return $infos;
+    }
+
+    protected function getInfosOfFromIdealPrice($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $url = 'https://www.idealprice.fr/recherche?controller=search&orderby=position&orderway=desc&search_query='.urlencode($ean).'&submit_search=';
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+        if($crawler->getUri() == $url)
+        {
+            $newUrl = null;
+            $done = false;
+            $crawler->filter('#product_list a')->eq(0)->each(function ($node) use (& $newUrl)
+            {
+                $newUrl = $node->attr('href');
+            });
+            if ($newUrl == null)
+            {
+                return null;
+            }
+
+            $client = new \Goutte\Client();
+            $crawler = $client->request('GET', $newUrl);
+        }
+
+
+        $crawler->filter('span.editable')->each(function ($node) use (& $infos){
+            $infos['model'] = $node->text();
+        });
+
+        $infos['uri'] = $crawler->getUri();
+        $price = $this->ecomPriceService->getPrice($infos['uri']);
+        if($price)
+        {
+            $infos['price'] = $price;
+        }
+
+        return $infos;
+    }
+
+    protected function getInfosOfFromUbaldi($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $models = array_key_exists('model', $parametersInfos) ? $parametersInfos['model'] : array();
+        if(empty($models))
+        {
+            return null;
+        }
+        $model = array_shift($models);
+        $url = 'http://www.ubaldi.com/recherche/four-encastrable/'.urlencode(str_replace(' ', '-', $model)).'.php';
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+        
+        $newUrl = null;
+        $done = false;
+        $crawler->filter('#main-liste-articles a')->eq(0)->each(function ($node) use (& $newUrl)
+        {
+            $newUrl = $node->attr('href');
+        });
+        if ($newUrl == null)
+        {
+            return null;
+        }
+
+        if($newUrl && $newUrl{0} == '/')
+        {
+            $newUrl = 'http://www.ubaldi.com'.$newUrl;
+        }
+
+        if ( ! $this->urlMatchModel($newUrl, $model))
+        {
+            return null;
+        }
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $newUrl);
+
+
+        $crawler->filter('.liste-specs .ls-ligne')->each(function ($node) use (& $infos){
+
+            $textLabel = null;
+            $value = null;
+            $index = 0;
+            $node->filter('.ls-titre')->each(function($subNode) use (&$textLabel, & $value, &$index) {
+                $textLabel = trim($subNode->text());
+            });
+            $node->filter('.ls-valeur')->each(function($subNode) use (&$textLabel, & $value, &$index) {
+                $value = trim($subNode->text());
+            });
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
 
         $infos['uri'] = $crawler->getUri();
         $price = $this->ecomPriceService->getPrice($infos['uri']);
@@ -740,8 +1309,6 @@ class EcomInfo
 
         $newUrl = null;
         $crawler->filter('.jackpot-merchant a')->each(function ($node) use (& $infos, & $newUrl){
-            var_dump($node->text());
-            var_dump($node->attr('href'));
             if(stripos($node->text(), 'allopneu') !== false)
             {
                 $newUrl = 'https://www.google.fr' . $node->attr('href');
@@ -807,7 +1374,7 @@ class EcomInfo
     }
 
 
-    protected function aspirateurGetInfosFromLabel($infos, $textLabel, $value)
+    protected function aspirateurGetInfosFromLabel($infos, $textLabel, $value, $otherInfos = array())
     {
         $textLabel = trim($textLabel);
         $textLabel = trim($textLabel, ':');
@@ -840,7 +1407,7 @@ class EcomInfo
         {
             $textLabel='CapacitéVolume';
         }
-        if($textLabel == 'Code' && array_key_exists('model', $infos))
+        if($textLabel == 'Code' && (array_key_exists('model', $infos) || array_key_exists('model', $otherInfos)))
         {
             $textLabel='InternalCode';
         }
@@ -893,6 +1460,7 @@ class EcomInfo
                 break;
             case 'Niveau sonore':
             case 'Niveau sonore (Norme EN 60704-3)':
+            case 'Niveau Sonore (dB)':
                 $infos['bruit'] = $this->cleanBruit($value);
                 break;
             case 'Contenance':
@@ -902,11 +1470,14 @@ class EcomInfo
                 break;
             case 'Volume utile du réfrigérateur':
             case 'Volume utile':
+            case 'Volume utile Réfrigérateur':
             case 'Volume réfrigérateur':
+            case 'Volume utile réfrigérateur (L)':
                 $infos['volumeFridge'] = $this->cleanVolume($value);
                 break;
             case 'Volume utile du congélateur':
             case 'Volume congélateur':
+            case 'Volume utile Congélateur':
                 $infos['volumeFreezer'] = $this->cleanVolume($value);
                 break;
             case 'Largeur (cm)':
@@ -919,6 +1490,7 @@ class EcomInfo
             case 'Classe énergétique':
             case 'Efficacité énergétique (10 niveaux)':
             case 'Efficacité énergétique':
+            case 'Ecolabel d\'énergie':
                 $infos['energyClass'] = $this->cleanEnergyClass($value);
                 break;
 
@@ -959,10 +1531,12 @@ class EcomInfo
                 break;
 
             case 'Consommation en convection classique':
+            case 'Chauffage classique':
                 $infos['classicalConsumtion'] = $this->cleanPuissance($value);
                 break;
 
             case 'Consommation en convection forcée':
+            case 'Convection forcée':
                 $infos['forcedConsumtion'] = $this->cleanPuissance($value);
                 break;
 
@@ -1034,15 +1608,6 @@ class EcomInfo
                 }
                 break;
             default:
-                /*
-                var_dump($textLabel);
-                for($i=0;$i<strlen($textLabel);$i++)
-                {
-                    //var_dump(ord($textLabel{$i}));
-                }
-                var_dump($textLabel{strlen($textLabel)-1});
-                var_dump(ord($textLabel{strlen($textLabel)-1}));
-                */
                 //var_dump($textLabel.' : '.$value);
         }
         return $infos;
@@ -1151,5 +1716,39 @@ class EcomInfo
             $value = 60;
         }
         return $value;
+    }
+    
+    protected function urlMatchModel($newUrl, $model)
+    {
+        if(stripos($newUrl, $model) !== false)
+        {
+            return true;
+        }
+        if(stripos($newUrl, urlencode($model)) !== false)
+        {
+            return true;
+        }
+        if(stripos($newUrl, rawurlencode($model)) !== false)
+        {
+            return true;
+        }
+        if(stripos($newUrl, str_replace(' ', '-', $model)) !== false)
+        {
+            return true;
+        }
+        if(strpos($model, ' ') !== false)
+        {
+            $tmp = array_filter(explode(' ', $model));
+            
+            foreach($tmp as $term)
+            {
+                if( ! $this->urlMatchModel($newUrl, $term))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

@@ -162,11 +162,25 @@ class EcomPrice
         return $price;
     }
 
-    protected function getPriceFromAmazon($url)
+    protected function getPriceFromAmazon($url, $tryLeft = 5)
     {
+        $stack = new \GuzzleHttp\HandlerStack();
+        $stack->setHandler(new \GuzzleHttp\Handler\CurlHandler());
+        $stack->push(\GuzzleTor\Middleware::tor());
+        $torGuzzleClient = new \GuzzleHttp\Client(['handler' => $stack]);
+        //
+        
+        /*
+        $response = $client->get('https://check.torproject.org/');
+        var_dump((string)$response->getBody());die();
+        */
+        
+        //sleep(rand(0,3));
         $price = 0;
 
         $client = new \Goutte\Client();
+        $client->setClient($torGuzzleClient);
+        $client->setHeader('User-Agent', "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36");
         $crawler = $client->request('GET', $url);
         $crawler->filter('#priceblock_ourprice')->each(function ($node) use (& $price){
             $price = ($node->text());
@@ -176,8 +190,15 @@ class EcomPrice
         });
         $crawler->filter('#soldByThirdParty .a-color-price')->each(function ($node) use (& $price){
             $price = ($node->text());
-        });        
+        });
         $price = $this->formatPrice($price);
+        
+        if($price == 0 && $tryLeft > 0)
+        {
+            sleep(6-$tryLeft);
+            $tryLeft--;
+            return $this->getPriceFromAmazon($url, $tryLeft);
+        }
 
         return $price;
     }
@@ -255,12 +276,16 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
-        $crawler->filter('.gsRow .col-xs-6.prdInfos .price.spacerBottomXs')->each(function ($node) use (& $price){
+        $crawler->filter('.gsRow .col-xs-6.prdInfos .price.spacerBottomXs')->eq(0)->each(function ($node) use (& $price){
             $price = ($node->text());
         });
-        $crawler->filter('#prdRightCol .price')->each(function ($node) use (& $price){
-            $price = ($node->text());
-        });
+        if(empty($price))
+        {
+            $crawler->filter('#prdRightCol .price')->eq(0)->each(function ($node) use (& $price)
+            {
+                $price = ($node->text());
+            });
+        }
 
         $price = $this->formatPrice($price);
 

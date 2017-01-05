@@ -38,6 +38,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $ecomInfoSer = $this->getContainer()->get('ecom.info');
         $ecomAffiSer = $this->getContainer()->get('ecom.affiliation');
         $ecomSheet = $this->getContainer()->get('ecom.sheet_updater');
+        
 
         $docId = $this->input->getOption('doc');
         $category = $this->input->getOption('category');
@@ -45,6 +46,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         {
             $category = $this->guessCategoryFromDoc($docId);
         }
+        $checkInfo = $this->input->getOption('checkinfo') == "true";
         
         $sheets = $ecomSheet->getSheets($docId);
         foreach($sheets as $sheet)
@@ -79,38 +81,6 @@ class SheetUpdateCommand extends ContainerAwareCommand
                     }
                 }
             }
-            /*
-            
-            for ($iColumn = 0; $iColumn < 24; $iColumn++)
-            {
-                $letter = $letters{$iColumn};
-                //$value = $ecomSheet->getSheetValue($docId, $letter . "1", $sheet['title']);
-                $value = array_key_exists($iColumn, $headers) ? $headers[$iColumn] : null;
-                if ($value == "Prix (€)" || $value == "Le meilleur prix")
-                {
-                    $columnForPrice = $letter;
-                } elseif ($value == "Lien pour acheter")
-                {
-                    $columnForUrl = $letter;
-                } elseif ($value == "Date MAJ Prix")
-                {
-                    $columnForDate = $letter;
-                }
-                if ($columnForUrl && $columnForPrice && $columnForDate)
-                {
-                    break;
-                }
-            }
-
-            if (empty($columnForPrice))
-            {
-                throw new \Exception("Unable to find price column");
-            }
-            if (empty($columnForUrl))
-            {
-                throw new \Exception("Unable to find url column");
-            }
-            */
 
             $nbPerPacket = 50;
             $packetIndex = 0;
@@ -140,12 +110,6 @@ class SheetUpdateCommand extends ContainerAwareCommand
                     }
                     $readedInfos[$k] = $values;
                 }
-                /*
-                if ($infosUrl === null || $infosPrice === null)
-                {
-                    break;
-                }
-                */
 
                 $packetIndex++;
                 if( ! is_array($eans))
@@ -183,40 +147,75 @@ class SheetUpdateCommand extends ContainerAwareCommand
                         $actualValue = $readedInfos[$columnName][$localIndex];
                         if(empty($actualValue))
                         {
+                            if($columnName == 'price' || $columnName == 'uri')
+                            {
+                                continue;
+                            }
                             //On va alors remplir le fichier excel
                             $newValue = null;
-
+                            $theyAgree = true;
                             foreach ($detectedValues as $provider => $value)
                             {
                                 //TODO : setValue
-                                $newValue = $value;
+                                if($newValue == null)
+                                {
+                                    $newValue = $value;
+                                }elseif($newValue != $value)
+                                {
+                                    $theyAgree = false;
+                                }                                
                             }
                             if($newValue)
                             {
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we fill it with : '.$newValue;
-                                $this->errors[] = $errorMessage;
-                                $this->output->writeln($errorMessage);
-                                //TODO effectivement faire le set
+                                if( ! $theyAgree)
+                                {
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we can fill it with : ';
+                                    foreach($detectedValues as $provider => $value)
+                                    {
+                                        $link = array_key_exists($localIndex, $readedInfos['uri']) ? $readedInfos['uri'][$localIndex] : null;
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="TODO">CHOOSE IT</a>'.($link ?  ' ( '.$link.' )' : '');
+                                    }
+                                    $this->errors[] = $errorMessage;
+                                    $this->output->writeln($errorMessage);
+                                }else{
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we fill it with : '.$newValue. ' ('.count($detectedValues).' concordant infos)';
+                                    $this->errors[] = $errorMessage;
+                                    $this->output->writeln($errorMessage);
+                                    //TODO effectivement faire le set
+                                }                                                                
                             }                            
                         }else
                         {
-                            $valueIsDetected = in_array($actualValue, $detectedValues) || in_array(strtolower($actualValue), array_map('strtolower', $detectedValues));
-                            if (!$valueIsDetected && !in_array($columnName, array('brand', 'model', 'uri', 'price')))
+                            if($checkInfo)
                             {
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' : actualValue : ' . $actualValue . '. Detected value : ';
+                                $newValue = null;
+                                $theyAgree = true;
                                 foreach ($detectedValues as $provider => $value)
                                 {
-                                    $_url = $detectedInfos['uri'][$provider];
-                                    $errorMessage .= '<br /> - ' . $value . ' (<a href="' . $_url . '">' . $_url . '</a>';
+                                    //TODO : setValue
+                                    if($newValue == null)
+                                    {
+                                        $newValue = $value;
+                                    }elseif($newValue != $value)
+                                    {
+                                        $theyAgree = false;
+                                    }
                                 }
-                                $this->errors[] = $errorMessage;
-                                $this->output->writeln($errorMessage);
+                                if( ! $theyAgree || $newValue != $actualValue)
+                                {
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' : actualValue : ' . $actualValue . '. Detected value : ';
+                                    foreach($detectedValues as $provider => $value)
+                                    {
+                                        $link = $readedInfos['uri'][$localIndex];
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="TODO">CHOOSE IT</a> ( '.$link.' )';
+                                    }
+                                }
                             }
                         }
                     }
 
                     $actualPrice = $oldPrice = array_key_exists('price', $readedInfos) ? (array_key_exists($localIndex, $readedInfos['price']) ? $readedInfos['price'][$localIndex] : null) : null;
-                    if($readedInfos['uri'][$localIndex])
+                    if(array_key_exists('uri', $readedInfos) && array_key_exists($localIndex, $readedInfos['uri']) && $readedInfos['uri'][$localIndex])
                     {
                         $newPrice = $ecomPriceSer->getPrice($readedInfos['uri'][$localIndex]);
                         if($newPrice != $actualPrice || $actualPrice === null)
@@ -261,15 +260,17 @@ class SheetUpdateCommand extends ContainerAwareCommand
                         $this->output->writeln($errorMessage);
                     }
                     
-                    $url = $readedInfos['uri'][$localIndex];
-                    $newUrl = $ecomAffiSer->getNewUrl($url);
-                    if($newUrl != $url)
+                    $url = array_key_exists($localIndex, $readedInfos['uri']) ? $readedInfos['uri'][$localIndex] : null;
+                    if($url)
                     {
-                        $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' setting affiliation '.$newUrl;
-                        $this->errors[] = $errorMessage;
-                        $this->output->writeln($errorMessage);
-                    }
-                    
+                        $newUrl = $ecomAffiSer->getNewUrl($url);
+                        if ($newUrl != $url)
+                        {
+                            $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' setting affiliation tag to link ' . $newUrl;
+                            $this->errors[] = $errorMessage;
+                            $this->output->writeln($errorMessage);
+                        }
+                    }                    
                 }
                 $this->output->writeln("sheet " . $sheet['title'] . " done");
             }            
@@ -285,7 +286,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
     {
         $associations = array();
         $associations['uri'] = array("Lien pour acheter");
-        $associations['price'] = array("Prix (€)");
+        $associations['price'] = array("Prix (€)", "Le meilleur prix");
         $associations['brand'] = array("brand");
         $associations['model'] = array("model");
         $associations['ean'] = array("ean");
@@ -387,7 +388,15 @@ class SheetUpdateCommand extends ContainerAwareCommand
           'Document type',
           null
         );
-        
+
+        $this->addOption(
+          'checkinfo',
+          '',
+          InputOption::VALUE_OPTIONAL,
+          'Check all informations. Default false',
+          null
+        );
+
     }
 
 
@@ -448,7 +457,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $body .= "\n".'<ul>';
         foreach($this->errors as $error)
         {
-            $body .= "\n".'<li>'.$error.'</li>';
+            $body .= "\n".'<li>'.nl2br($error).'</li>';
         }
         $body .= "\n".'</ul>';
         $body .= "\n".'</div>';

@@ -31,7 +31,8 @@
         "fabpot/goutte": "^3.2",
         "asimlqt/php-google-spreadsheet-client": "^3.0",
         "google/apiclient": "^2.0",
-        "fastglass/sendgrid": "^1.0"
+        "fastglass/sendgrid": "^1.0",
+        "megahertz/guzzle-tor": "^1.0"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",
