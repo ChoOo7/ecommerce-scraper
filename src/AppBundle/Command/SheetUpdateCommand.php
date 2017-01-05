@@ -38,7 +38,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $ecomInfoSer = $this->getContainer()->get('ecom.info');
         $ecomAffiSer = $this->getContainer()->get('ecom.affiliation');
         $ecomSheet = $this->getContainer()->get('ecom.sheet_updater');
-        
+
+        $doRemovePrice = false;
 
         $docId = $this->input->getOption('doc');
         $category = $this->input->getOption('category');
@@ -160,7 +161,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 if($newValue == null)
                                 {
                                     $newValue = $value;
-                                }elseif($newValue != $value)
+                                }elseif($newValue != $value && strtolower($newValue) != strtolower($value))
                                 {
                                     $theyAgree = false;
                                 }                                
@@ -173,7 +174,11 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     foreach($detectedValues as $provider => $value)
                                     {
                                         $link = array_key_exists($localIndex, $readedInfos['uri']) ? $readedInfos['uri'][$localIndex] : null;
-                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="TODO">CHOOSE IT</a>'.($link ?  ' ( '.$link.' )' : '');
+
+                                        $column = $columnIndexes[$columnName];
+                                        $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
+                                        
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="'.$updateUrl.'">CHOOSE IT</a>'.($link ?  ' ( '.$link.' )' : '');
                                     }
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
@@ -181,22 +186,24 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we fill it with : '.$newValue. ' ('.count($detectedValues).' concordant infos)';
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
-                                    //TODO effectivement faire le set
+                                    
+                                    $column = $columnIndexes[$columnName];
+                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newValue);
                                 }                                                                
                             }                            
                         }else
                         {
+                            //We check actual values
                             if($checkInfo)
                             {
                                 $newValue = null;
                                 $theyAgree = true;
                                 foreach ($detectedValues as $provider => $value)
                                 {
-                                    //TODO : setValue
                                     if($newValue == null)
                                     {
                                         $newValue = $value;
-                                    }elseif($newValue != $value)
+                                    }elseif($newValue != $value && strtolower($newValue) != strtolower($value))
                                     {
                                         $theyAgree = false;
                                     }
@@ -207,7 +214,11 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     foreach($detectedValues as $provider => $value)
                                     {
                                         $link = $readedInfos['uri'][$localIndex];
-                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="TODO">CHOOSE IT</a> ( '.$link.' )';
+
+                                        $column = $columnIndexes[$columnName];
+                                        $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
+                                        
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="'.$updateUrl.'">CHOOSE IT</a> ( '.$link.' )';
                                     }
                                 }
                             }
@@ -225,15 +236,36 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from '.$actualPrice.' to '.$newPrice;
                                 $this->errors[] = $errorMessage;
                                 $this->output->writeln($errorMessage);
-                                //TODO : effectuer la modification de prix
-                            }else{
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected, we remove link and price';
-                                
-                                $this->errors[] = $errorMessage;
-                                $this->output->writeln($errorMessage);
 
-                                $readedInfos['price'][$localIndex] = '';
-                                $actualPrice = $oldPrice = null;
+                                $column = $columnIndexes['price'];
+                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newPrice);
+                            }else{
+                                if($doRemovePrice)
+                                {
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected, we remove link and price';
+
+                                    $this->errors[] = $errorMessage;
+                                    $this->output->writeln($errorMessage);
+
+                                    $readedInfos['price'][$localIndex] = '';
+                                    $actualPrice = $oldPrice = null;
+
+                                    $column = $columnIndexes['price'];
+                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '');
+                                    $column = $columnIndexes['uri'];
+                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '');
+                                }else{
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected';
+
+                                    $columnPrice = $columnIndexes['price'];
+                                    $columnUri = $columnIndexes['uri'];
+                                    
+                                    $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($columnPrice.$globalLineNumber=>'', $columnUri.$globalLineNumber=>''));
+                                    $errorMessage .= '<br /><a href="'.$updateUrl.'">confirm and remove price and link</a>';
+
+                                    $this->errors[] = $errorMessage;
+                                    $this->output->writeln($errorMessage);
+                                }
                             }
                         }
                     }
@@ -251,6 +283,12 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 $newUrl = $ecomAffiSer->getNewUrl($newUrl);
 
                                 $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - ' . $newUrl;
+                                
+                                $column = $columnIndexes['price'];
+                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $proposedPrice);
+                                
+                                $column = $columnIndexes['uri'];
+                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newUrl);
                             }
                         }
                     }
@@ -269,6 +307,9 @@ class SheetUpdateCommand extends ContainerAwareCommand
                             $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' setting affiliation tag to link ' . $newUrl;
                             $this->errors[] = $errorMessage;
                             $this->output->writeln($errorMessage);
+                            
+                            $column = $columnIndexes['uri'];
+                            $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newUrl);
                         }
                     }                    
                 }
@@ -276,9 +317,21 @@ class SheetUpdateCommand extends ContainerAwareCommand
             }            
         }
         
-        //$this->sendMailWithErrors();
+        $this->sendMailWithErrors();
         
         $this->output->writeln("DONE");
+    }
+    
+    protected function generateSetValueUrl($docId, $sheet, $valuesToUpdate)
+    {
+        $parameters = array();
+        $parameters['doc'] = $docId;
+        $parameters['sheet'] = $sheet;
+        $parameters['valuesToUpdate'] = $valuesToUpdate;
+        $isRasp = ! file_exists('/1to/');
+        $hostname = $isRasp ? 'ecom-scrapper.home.chooo7.com' : 'ecom.local';
+        $url = 'http://'.$hostname.'/setSheetValue?'.http_build_query($parameters, null, '&');
+        return $url;
     }
 
 

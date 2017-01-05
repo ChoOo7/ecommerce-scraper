@@ -25,91 +25,118 @@ class EcomPrice
     /**
      * {@inheritDoc}
      */
-    public function getPrice($url)
+    public function getPrice($url, $tryLeft = 3)
     {
+        $price = null;
         $hostname = parse_url($url, PHP_URL_HOST);
         $hostname = strtolower($hostname);
         switch($hostname)
         {
             case 'www.boulanger.fr':
             case 'www.boulanger.com':
-                return $this->getPriceFromBoulanger($url);
+                $price = $this->getPriceFromBoulanger($url);
+                break;
 
             case 'www.darty.fr':
             case 'www.darty.com':
-                return $this->getPriceFromDarty($url);
+                $price = $this->getPriceFromDarty($url);
+                break;
 
             case 'www.amazon.fr':
-                return $this->getPriceFromAmazon($url);
+                $price = $this->getPriceFromAmazon($url);
+                break;
 
             case 'www.rueducommerce.fr':
-                return $this->getPriceFromRueDuCommerce($url);
+                $price = $this->getPriceFromRueDuCommerce($url);
+                break;
 
             case 'www.cdiscount.com':
-                return $this->getPriceFromCDiscount($url);
+                $price = $this->getPriceFromCDiscount($url);
+                break;
 
             case 'www.arredatutto.com':
-                return $this->getPriceFromArredatutto($url);
+                $price = $this->getPriceFromArredatutto($url);
+                break;
 
             case 'www.priceminister.com':
-                return $this->getPriceFromPriceMinister($url);
+                $price = $this->getPriceFromPriceMinister($url);
+                break;
 
             case 'www.mistergooddeal.com':
-                return $this->getPriceFromMisterGoodDeal($url);
+                $price = $this->getPriceFromMisterGoodDeal($url);
+                break;
 
             case 'www.electrodepot.fr':
-                return $this->getPriceFromElectroDepot($url);
+                $price = $this->getPriceFromElectroDepot($url);
+                break;
 
             case 'www.abribatelectromenager.fr':
-                return $this->getPriceFromAbribatElectromenager($url);
+                $price = $this->getPriceFromAbribatElectromenager($url);
+                break;
 
             case 'www.conforama.fr':
-                return $this->getPriceFromConforama($url);
+                $price = $this->getPriceFromConforama($url);
+                break;
 
             case 'www.backmarket.fr':
-                return $this->getPriceFromBackMarket($url);
+                $price = $this->getPriceFromBackMarket($url);
+                break;
 
             case 'www.webdistrib.com':
-                return $this->getPriceFromWebDistrib($url);
+                $price = $this->getPriceFromWebDistrib($url);
+                break;
 
             case 'www.maginea.com':
-                return $this->getPriceFromMaginea($url);
+                $price = $this->getPriceFromMaginea($url);
+                break;
 
             case 'www.etrouvetout.com':
-                return $this->getPriceFromETrouveTout($url);
+                $price = $this->getPriceFromETrouveTout($url);
+                break;
 
             case 'www.allopneus.com':
-                return $this->getPriceFromAlloPneus($url);
+                $price = $this->getPriceFromAlloPneus($url);
+                break;
 
             case 'www.touspourunprix.fr':
-                return $this->getPriceFromTousPourUnPrix($url);
+                $price = $this->getPriceFromTousPourUnPrix($url);
+                break;
 
             case 'www.tyrigo.com':
-                return $this->getPriceFromTyrigo($url);
+                $price = $this->getPriceFromTyrigo($url);
+                break;
 
             case 'www.lacooplr.fr':
-                return $this->getPriceFromLaCoopLr($url);
+                $price = $this->getPriceFromLaCoopLr($url);
+                break;
 
             case 'www.magasins-privilege.fr':
-                return $this->getPriceFromMagasinsPrivilege($url);
+                $price = $this->getPriceFromMagasinsPrivilege($url);
+                break;
 
             case 'www.idealprice.fr':
-                return $this->getPriceFromIdealPrice($url);
+                $price = $this->getPriceFromIdealPrice($url);
+                break;
 
             case 'www.villatech.fr':
-                return $this->getPriceFromVillaTech($url);
+                $price = $this->getPriceFromVillaTech($url);
+                break;
 
             case 'www.ubaldi.com':
-                return $this->getPriceFromUbaldi($url);
+                $price = $this->getPriceFromUbaldi($url);
+                break;
 
             case 'track.effiliation.com':
-                return $this->getPriceFromEffiliation($url);
+                $price = $this->getPriceFromEffiliation($url);
+                break;
 
             case 'www.vieffetrade.eu':
-                return $this->getPriceFromVieffetrade($url);
+                $price = $this->getPriceFromVieffetrade($url);
+                break;
 
             case 'www.klarstein.fr':
-                return $this->getPriceFromKlarstein($url);
+                $price = $this->getPriceFromKlarstein($url);
+                break;
 
             case 'www.centralepneus.fr':
                 return $this->getPriceFromCentralePneus($url);
@@ -120,7 +147,12 @@ class EcomPrice
                 return null;
                 
         }
-        return null;
+        if(( empty($price) || $price < 0 ) && $tryLeft > 0)
+        {
+            $tryLeft--;
+            return $this->getPrice($url, $tryLeft);
+        }
+        return $price;
     }
 
     protected function getPriceFromBoulanger($url)

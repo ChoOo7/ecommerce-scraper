@@ -48,6 +48,31 @@ class DefaultController extends Controller
         shell_exec($command);
         return $this->redirect($this->generateUrl("homepage"));
     }
+
+
+    /**
+     * @Route("/setSheetValue", name="setSheetValue")
+     */
+    public function setSheetValueAction(Request $request)
+    {
+        // replace this example code with whatever you need
+        $root = $this->get('kernel')->getRootDir();
+
+        $docId = $request->get('doc');
+        $sheet = $request->get('sheet');
+        $valuesToUpdate = $request->get('valuesToUpdate');
+
+        $ecomSheet = $this->get('ecom.sheet_updater');
+        
+        foreach($valuesToUpdate as $cellIdentifier=>$newValue)
+        {
+            $ecomSheet->setSheetValue($docId, $cellIdentifier, $newValue);
+        }
+        
+        return $this->redirect($this->generateUrl("homepage"));
+    }
+
+
     
     /**
     * @Route("/findinfo", name="findinfo")
