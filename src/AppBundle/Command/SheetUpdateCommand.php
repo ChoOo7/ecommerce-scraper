@@ -317,7 +317,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
             }            
         }
         
-        $this->sendMailWithErrors();
+        $this->sendMailWithErrors($category);
         
         $this->output->writeln("DONE");
     }
@@ -477,7 +477,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         return null;
     }
     
-    protected function sendMailWithErrors()
+    protected function sendMailWithErrors($category)
     {
         if(empty($this->errors))
         {
@@ -501,7 +501,11 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $docId = $this->input->getOption('doc');
         $documentLink = 'https://docs.google.com/spreadsheets/d/'.$docId.'/edit';
 
-        $subject = "Import result error";
+        $subject = "Import result ";
+        if($category)
+        {
+            $subject.= ' on '.$category;
+        }
         $body = "<h1>Errors</h1>";
         $body .= "\n".'<div>';
         $body .= "\n".'<p>Document : <a href="'.$documentLink.'">'.$documentLink.'</a></p>';
