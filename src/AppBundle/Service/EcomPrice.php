@@ -306,7 +306,13 @@ class EcomPrice
     {
         $price = 0;
 
+        $stack = new \GuzzleHttp\HandlerStack();
+        $stack->setHandler(new \GuzzleHttp\Handler\CurlHandler());
+        $stack->push(\GuzzleTor\Middleware::tor());
+        $torGuzzleClient = new \GuzzleHttp\Client(['handler' => $stack]);
+
         $client = new \Goutte\Client();
+        $client->setClient($torGuzzleClient);
         $crawler = $client->request('GET', $url);
         $crawler->filter('.gsRow .col-xs-6.prdInfos .price.spacerBottomXs')->eq(0)->each(function ($node) use (& $price){
             $price = ($node->text());

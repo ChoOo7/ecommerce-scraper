@@ -108,7 +108,7 @@ class EcomInfo
 //                return array('AlloPneus');
 
             default:
-                return array('Darty', 'EanFind', 'EanSearch', 'IdealPrice', 'VillaTech', 'Boulanger', 'EanFind', 'WebDistrib', /*'Amazon', */'ElectroDepot', 'RueDuCommerce', 'TousPourUnPrix', 'PriceMinister', 'MisterGoodDeal', 'CDiscount', 'Arredatutto', 'Conforama', 'ElectroMenagerCompare', 'Ubaldi');
+                return array('Darty', 'EanFind', 'EanSearch', 'IdealPrice', 'VillaTech', 'Boulanger', 'EanFind', 'WebDistrib', 'Amazon', 'ElectroDepot', 'RueDuCommerce', 'TousPourUnPrix', 'PriceMinister', 'MisterGoodDeal', 'CDiscount', 'Arredatutto', 'Conforama', 'ElectroMenagerCompare', 'Ubaldi');
         }
         return array();
     }
@@ -626,8 +626,13 @@ class EcomInfo
 
         $url = 'http://www.priceminister.com/s/'.urlencode($ean);
 
+        $stack = new \GuzzleHttp\HandlerStack();
+        $stack->setHandler(new \GuzzleHttp\Handler\CurlHandler());
+        $stack->push(\GuzzleTor\Middleware::tor());
+        $torGuzzleClient = new \GuzzleHttp\Client(['handler' => $stack]);
 
         $client = new \Goutte\Client();
+        $client->setClient($torGuzzleClient);
         $crawler = $client->request('GET', $url);
 
 
@@ -654,6 +659,7 @@ class EcomInfo
             }
 
             $client = new \Goutte\Client();
+            $client->setClient($torGuzzleClient);
             $crawler = $client->request('GET', $newUrl);
         }
 
