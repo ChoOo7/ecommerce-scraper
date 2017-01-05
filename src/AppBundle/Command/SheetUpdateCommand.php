@@ -282,7 +282,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 $newUrl = $detectedInfos['uri'][$provider];
                                 $newUrl = $ecomAffiSer->getNewUrl($newUrl);
 
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - ' . $newUrl;
+                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a href="'.$newUrl.'">' . $newUrl.'</a>';
                                 
                                 $column = $columnIndexes['price'];
                                 $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $proposedPrice);
