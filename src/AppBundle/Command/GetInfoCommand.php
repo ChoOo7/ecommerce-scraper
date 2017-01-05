@@ -52,7 +52,7 @@ class GetInfoCommand extends ContainerAwareCommand
                         break;
                     }
                 }
-                if($theyAgree)
+                if($theyAgree && count($infoValues) >= 2)
                 {
                     $this->output->writeln("\t" . count($infoValues).' sites : '.$lastValue);
                 }else{

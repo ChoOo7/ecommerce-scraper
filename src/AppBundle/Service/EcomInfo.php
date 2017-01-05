@@ -635,42 +635,44 @@ class EcomInfo
         $client->setClient($torGuzzleClient);
         $crawler = $client->request('GET', $url);
 
+        $model = array_key_exists('model', $parametersInfos) ? $parametersInfos['model'] : null;
+        $brand = array_key_exists('brand', $parametersInfos) ? $parametersInfos['brand'] : null;
 
-        if($crawler->getUri() == $url)
+        $newUrl = null;
+        $done = false;
+        $crawler->filter('#productCtn .navByList .productNav a')->eq(0)->each(function ($node) use (& $newUrl)
         {
-            $newUrl = null;
-            $done = false;
-            $crawler->filter('#productCtn .navByList .productNav a')->eq(0)->each(function ($node) use (& $newUrl)
-            {
-                $newUrl = $node->attr('href');
-            });
-            if($newUrl && $newUrl{0} == '/')
-            {
-                $newUrl = 'http://www.priceminister.com/'.$newUrl;
-            }
-            if ($newUrl == null)
-            {
-                return null;
-            }
-
-            if ($newUrl == null)
-            {
-                return null;
-            }
-
-            $client = new \Goutte\Client();
-            $client->setClient($torGuzzleClient);
-            $crawler = $client->request('GET', $newUrl);
+            $newUrl = $node->attr('href');
+        });
+        if($newUrl && $newUrl{0} == '/')
+        {
+            $newUrl = 'http://www.priceminister.com/'.$newUrl;
+        }
+        if ($newUrl == null)
+        {
+            return null;
         }
 
-        if($crawler->getUri() != $url)
+        if ($model && ! $this->urlMatchModel($newUrl, array_shift($model)))
+        {
+            return null;
+        }
+
+        if ($brand && ! $this->urlMatchModel($newUrl, array_shift($brand)))
+        {
+            return null;
+        }
+
+        $client = new \Goutte\Client();
+        $client->setClient($torGuzzleClient);
+        $crawler = $client->request('GET', $newUrl);
+
+        $price = $this->ecomPriceService->getPrice($crawler->getUri());
+        if ($price)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
-            {
-                $infos['price'] = $price;
-            }
+            $infos['price'] = $price;
+
         }
 
         return $infos;
@@ -816,6 +818,7 @@ class EcomInfo
         {
             sleep(6-$tryLeft);
             $tryLeft--;
+            echo "\nretrying getInfosOfFromAmazon";
             return $this->getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft);
         }
         if($newUrl == null)

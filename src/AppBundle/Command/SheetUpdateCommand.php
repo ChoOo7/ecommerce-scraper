@@ -276,7 +276,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                     {
                         foreach ($detectedInfos['price'] as $provider => $proposedPrice)
                         {
-                            if ($proposedPrice < $actualPrice || $actualPrice === null)
+                            if ($proposedPrice > 0 && ($proposedPrice < $actualPrice || $actualPrice === null))
                             {
                                 $actualPrice = $proposedPrice;
                                 $newUrl = $detectedInfos['uri'][$provider];
