@@ -506,7 +506,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         {
             $subject.= ' on '.$category;
         }
-        $body = "<h1>Errors</h1>";
+        $body = "<h1>Actions : </h1>";
         $body .= "\n".'<div>';
         $body .= "\n".'<p>Document : <a href="'.$documentLink.'">'.$documentLink.'</a></p>';
         $body .= "\n".'</div>';
