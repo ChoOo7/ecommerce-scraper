@@ -30,122 +30,129 @@ class EcomPrice
         $price = null;
         $hostname = parse_url($url, PHP_URL_HOST);
         $hostname = strtolower($hostname);
-        switch($hostname)
+        try
         {
-            case 'www.boulanger.fr':
-            case 'www.boulanger.com':
-                $price = $this->getPriceFromBoulanger($url);
-                break;
+            switch ($hostname)
+            {
+                case 'www.boulanger.fr':
+                case 'www.boulanger.com':
+                    $price = $this->getPriceFromBoulanger($url);
+                    break;
 
-            case 'www.darty.fr':
-            case 'www.darty.com':
-                $price = $this->getPriceFromDarty($url);
-                break;
+                case 'www.darty.fr':
+                case 'www.darty.com':
+                    $price = $this->getPriceFromDarty($url);
+                    break;
 
-            case 'www.amazon.fr':
-                $price = $this->getPriceFromAmazon($url);
-                break;
+                case 'www.amazon.fr':
+                    $price = $this->getPriceFromAmazon($url);
+                    break;
 
-            case 'www.rueducommerce.fr':
-                $price = $this->getPriceFromRueDuCommerce($url);
-                break;
+                case 'www.rueducommerce.fr':
+                    $price = $this->getPriceFromRueDuCommerce($url);
+                    break;
 
-            case 'www.cdiscount.com':
-                $price = $this->getPriceFromCDiscount($url);
-                break;
+                case 'www.cdiscount.com':
+                    $price = $this->getPriceFromCDiscount($url);
+                    break;
 
-            case 'www.arredatutto.com':
-                $price = $this->getPriceFromArredatutto($url);
-                break;
+                case 'www.arredatutto.com':
+                    $price = $this->getPriceFromArredatutto($url);
+                    break;
 
-            case 'www.priceminister.com':
-                $price = $this->getPriceFromPriceMinister($url);
-                break;
+                case 'www.priceminister.com':
+                    $price = $this->getPriceFromPriceMinister($url);
+                    break;
 
-            case 'www.mistergooddeal.com':
-                $price = $this->getPriceFromMisterGoodDeal($url);
-                break;
+                case 'www.mistergooddeal.com':
+                    $price = $this->getPriceFromMisterGoodDeal($url);
+                    break;
 
-            case 'www.electrodepot.fr':
-                $price = $this->getPriceFromElectroDepot($url);
-                break;
+                case 'www.electrodepot.fr':
+                    $price = $this->getPriceFromElectroDepot($url);
+                    break;
 
-            case 'www.abribatelectromenager.fr':
-                $price = $this->getPriceFromAbribatElectromenager($url);
-                break;
+                case 'www.abribatelectromenager.fr':
+                    $price = $this->getPriceFromAbribatElectromenager($url);
+                    break;
 
-            case 'www.conforama.fr':
-                $price = $this->getPriceFromConforama($url);
-                break;
+                case 'www.conforama.fr':
+                    $price = $this->getPriceFromConforama($url);
+                    break;
 
-            case 'www.backmarket.fr':
-                $price = $this->getPriceFromBackMarket($url);
-                break;
+                case 'www.backmarket.fr':
+                    $price = $this->getPriceFromBackMarket($url);
+                    break;
 
-            case 'www.webdistrib.com':
-                $price = $this->getPriceFromWebDistrib($url);
-                break;
+                case 'www.webdistrib.com':
+                    $price = $this->getPriceFromWebDistrib($url);
+                    break;
 
-            case 'www.maginea.com':
-                $price = $this->getPriceFromMaginea($url);
-                break;
+                case 'www.maginea.com':
+                    $price = $this->getPriceFromMaginea($url);
+                    break;
 
-            case 'www.etrouvetout.com':
-                $price = $this->getPriceFromETrouveTout($url);
-                break;
+                case 'www.etrouvetout.com':
+                    $price = $this->getPriceFromETrouveTout($url);
+                    break;
 
-            case 'www.allopneus.com':
-                $price = $this->getPriceFromAlloPneus($url);
-                break;
+                case 'www.allopneus.com':
+                    $price = $this->getPriceFromAlloPneus($url);
+                    break;
 
-            case 'www.touspourunprix.fr':
-                $price = $this->getPriceFromTousPourUnPrix($url);
-                break;
+                case 'www.touspourunprix.fr':
+                    $price = $this->getPriceFromTousPourUnPrix($url);
+                    break;
 
-            case 'www.tyrigo.com':
-                $price = $this->getPriceFromTyrigo($url);
-                break;
+                case 'www.tyrigo.com':
+                    $price = $this->getPriceFromTyrigo($url);
+                    break;
 
-            case 'www.lacooplr.fr':
-                $price = $this->getPriceFromLaCoopLr($url);
-                break;
+                case 'www.lacooplr.fr':
+                    $price = $this->getPriceFromLaCoopLr($url);
+                    break;
 
-            case 'www.magasins-privilege.fr':
-                $price = $this->getPriceFromMagasinsPrivilege($url);
-                break;
+                case 'www.magasins-privilege.fr':
+                    $price = $this->getPriceFromMagasinsPrivilege($url);
+                    break;
 
-            case 'www.idealprice.fr':
-                $price = $this->getPriceFromIdealPrice($url);
-                break;
+                case 'www.idealprice.fr':
+                    $price = $this->getPriceFromIdealPrice($url);
+                    break;
 
-            case 'www.villatech.fr':
-                $price = $this->getPriceFromVillaTech($url);
-                break;
+                case 'www.villatech.fr':
+                    $price = $this->getPriceFromVillaTech($url);
+                    break;
 
-            case 'www.ubaldi.com':
-                $price = $this->getPriceFromUbaldi($url);
-                break;
+                case 'www.ubaldi.com':
+                    $price = $this->getPriceFromUbaldi($url);
+                    break;
 
-            case 'track.effiliation.com':
-                $price = $this->getPriceFromEffiliation($url);
-                break;
+                case 'track.effiliation.com':
+                    $price = $this->getPriceFromEffiliation($url);
+                    break;
 
-            case 'www.vieffetrade.eu':
-                $price = $this->getPriceFromVieffetrade($url);
-                break;
+                case 'www.vieffetrade.eu':
+                    $price = $this->getPriceFromVieffetrade($url);
+                    break;
 
-            case 'www.klarstein.fr':
-                $price = $this->getPriceFromKlarstein($url);
-                break;
+                case 'www.klarstein.fr':
+                    $price = $this->getPriceFromKlarstein($url);
+                    break;
 
-            case 'www.centralepneus.fr':
-                return $this->getPriceFromCentralePneus($url);
-                
+                case 'www.centralepneus.fr':
+                    return $this->getPriceFromCentralePneus($url);
 
-            case 'www.pixmania.fr':
-                //On sait pas faire
-                return null;
-                
+
+                case 'www.pixmania.fr':
+                    //On sait pas faire
+                    return null;
+
+            }
+        }
+        catch(\Exception $e)
+        {
+            echo "\nError getting price : ".$e->getMessage();
         }
         if(( empty($price) || $price < 0 ) && $tryLeft > 0)
         {

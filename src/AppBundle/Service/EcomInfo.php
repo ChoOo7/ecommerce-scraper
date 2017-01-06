@@ -75,18 +75,25 @@ class EcomInfo
         $providers = $this->getProvidersOfType($productType);
         foreach($providers as $provider)
         {
-            $methodName = "getInfosOfFrom".ucfirst($provider);
-            $infosBis = $this->$methodName($ean, $productType, $infos);
-            if($infosBis !== null)
+            try
             {
-                foreach ($infosBis as $k => $v)
+                $methodName = "getInfosOfFrom" . ucfirst($provider);
+                $infosBis = $this->$methodName($ean, $productType, $infos);
+                if ($infosBis !== null)
                 {
-                    if (!array_key_exists($k, $infos))
+                    foreach ($infosBis as $k => $v)
                     {
-                        $infos[$k] = array();
+                        if (!array_key_exists($k, $infos))
+                        {
+                            $infos[$k] = array();
+                        }
+                        $infos[$k][$provider] = $v;
                     }
-                    $infos[$k][$provider] = $v;
                 }
+            }
+            catch(\Exception $e)
+            {
+                echo "\nError getting info : ".$e->getMessage();
             }
         }
         if(array_key_exists('uri', $infos))
