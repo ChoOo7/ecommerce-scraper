@@ -120,7 +120,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                 }
                 foreach ($eans as $k => $data)
                 {
-                    $eans[$k] = $data[0];
+                    $eans[$k] = array_key_exists(0, $data) ? $data[0] : null;
                 }
                 if (count(array_filter($eans)) == 0)
                 {
@@ -130,6 +130,11 @@ class SheetUpdateCommand extends ContainerAwareCommand
 
                 foreach ($eans as $localIndex => $ean)
                 {
+                    if(empty($ean))
+                    {
+                        //sans ean, on ne fait rien !
+                        continue;
+                    }
                     $globalLineNumber = $lineNumber + $localIndex;
                     $detectedInfos = $ecomInfoSer->getInfos($ean, $category);
                     
