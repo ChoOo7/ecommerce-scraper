@@ -188,7 +188,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $this->output->writeln($errorMessage);
                                     
                                     $column = $columnIndexes[$columnName];
-                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newValue);
+                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newValue, $sheet['title']);
                                 }                                                                
                             }                            
                         }else
@@ -238,7 +238,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 $this->output->writeln($errorMessage);
 
                                 $column = $columnIndexes['price'];
-                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newPrice);
+                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newPrice, $sheet['title']);
                             }else{
                                 if($doRemovePrice)
                                 {
@@ -251,9 +251,9 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $actualPrice = $oldPrice = null;
 
                                     $column = $columnIndexes['price'];
-                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '');
+                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '', $sheet['title']);
                                     $column = $columnIndexes['uri'];
-                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '');
+                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '', $sheet['title']);
                                 }else{
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$readedInfos['uri'][$localIndex].'</a>';
 
@@ -291,10 +291,10 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' .$brand.' - '.$model. ' -  we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a href="'.$newUrl.'">' . $newUrl.'</a>';
                                 
                                 $column = $columnIndexes['price'];
-                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $proposedPrice);
+                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $proposedPrice, $sheet['title']);
                                 
                                 $column = $columnIndexes['uri'];
-                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newUrl);
+                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newUrl, $sheet['title']);
                             }
                         }
                     }
@@ -315,7 +315,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                             $this->output->writeln($errorMessage);
                             
                             $column = $columnIndexes['uri'];
-                            $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newUrl);
+                            $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newUrl, $sheet['title']);
                         }
                     }                    
                 }
