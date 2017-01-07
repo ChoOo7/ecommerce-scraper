@@ -109,7 +109,6 @@ class EcomInfo
     
     protected function getProvidersOfType($productType)
     {
-        return array('Darty', 'But');
         switch($productType)
         {
             case 'pneu':
@@ -117,7 +116,8 @@ class EcomInfo
 //                return array('AlloPneus');
 
             default:
-                return array('Darty', 'But', 'EanFind', 'EanSearch', 'IdealPrice', 'VillaTech', 'Boulanger', 'EanFind', 'WebDistrib', 'Amazon', 'ElectroDepot', 'RueDuCommerce', 'TousPourUnPrix', 'PriceMinister', 'MisterGoodDeal', 'CDiscount', 'Arredatutto', 'Conforama', 'ElectroMenagerCompare', 'Ubaldi');
+                //, 'Arredatutto' présent deux fois car ca permet parfois via l'ean de trouver le model
+                return array('Darty', 'But', 'Arredatutto', 'EanFind', 'EanSearch', 'IdealPrice', 'VillaTech', 'Boulanger', 'EanFind', 'WebDistrib', 'Amazon', 'ElectroDepot', 'RueDuCommerce', 'TousPourUnPrix', 'PriceMinister', 'MisterGoodDeal', 'CDiscount', 'Conforama', 'ElectroMenagerCompare', 'Ubaldi', 'Arredatutto');
         }
         return array();
     }
@@ -1323,47 +1323,70 @@ class EcomInfo
         $infos = array();
         $infos['ean'] = $ean;
 
-        $brands = array_key_exists('brand', $parametersInfos) ? $parametersInfos['brand'] : array();
-        if(empty($brands))
-        {
-            return null;
-        }
-        $brand = array_shift($brands);
+        $url = 'https://www.googleapis.com/customsearch/v1element?key=AIzaSyCVAXiUzRYsML1Pv6RwSG1gunmMikTzQqY&rsz=filtered_cse&num=10&hl=fr&prettyPrint=false&source=gcsc&gss=.com&sig=0c3990ce7a056ed50667fe0c3873c9b6&cx=003972871431851244756:5e2yxs2o9fm&q='.urlencode($ean).'&as_sitesearch=http%3A%2F%2Fwww.arredatutto.com%2Ffr%2F&sort=&googlehost=www.google.com';
 
-        $models = array_key_exists('model', $parametersInfos) ? $parametersInfos['model'] : array();
-        if(empty($models))
+        $json = file_get_contents($url);
+        $tmp = @json_decode($json, true);
+        $newUrl =  is_array($tmp) && array_key_exists(0, $tmp['results']) ? $tmp['results'][0]['unescapedUrl'] : null;
+        
+        if ($newUrl == null)
         {
-            return null;
-        }
-        $model = array_shift($models);
-        $url = array_shift($parametersInfos['uri']);
-        $url = 'http://www.arredatutto.com/fr/advanced_search_result.html?keyword='.urlencode($model).'';
+            $brands = array_key_exists('brand', $parametersInfos) ? $parametersInfos['brand'] : array();
+            if(empty($brands))
+            {
+                return null;
+            }
+            $brand = array_shift($brands);
 
-        $client = new \Goutte\Client();
-        $crawler = $client->request('GET', $url);
+            $models = array_key_exists('model', $parametersInfos) ? $parametersInfos['model'] : array();
+            if(empty($models))
+            {
+                return null;
+            }
+            $model = array_shift($models);
+            $url = 'http://www.arredatutto.com/fr/advanced_search_result.html?keyword='.urlencode($model).'';
+            $client = new \Goutte\Client();
+            $crawler = $client->request('GET', $url);
 
-        if($crawler->getUri() == $url)
-        {
             $newUrl = null;
             $done = false;
             $crawler->filter('ul.list-grid-products li h3 a')->eq(0)->each(function ($node) use (& $newUrl)
             {
                 $newUrl = $node->attr('href');
             });
-            if ($newUrl == null)
+            if($newUrl == null)
             {
-                return null;
+                return false;
             }
 
             if ( ! $this->urlMatchModel($newUrl, $model))
             {
                 return null;
             }
-
-            $client = new \Goutte\Client();
-            $crawler = $client->request('GET', $newUrl);
         }
 
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $newUrl);
+
+
+
+        $crawler->filter('[itemprop="brand"]')->eq(0)->each(function ($node) use (& $infos)
+        {
+            $infos['brand'] = $node->attr('content');
+        });
+
+        if(array_key_exists('brand', $infos))
+        {
+            $crawler->filter('[itemprop="name"]')->eq(0)->each(function ($node) use (& $infos)
+            {
+                $fullName = $node->text();
+                $model = trim(str_ireplace($infos['brand'], '', $fullName));
+                if($model)
+                {
+                    $infos['model'] = $model;
+                }
+            });
+        }
 
         $crawler->filter('.liste-specs .ls-ligne')->each(function ($node) use (& $infos){
 
@@ -1379,7 +1402,19 @@ class EcomInfo
             $textLabel = trim(str_replace('Aide', '', $textLabel));
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
         });
+        $crawler->filter('#specifiche_techiche_dimensioni .DetailsTitle')->each(function ($node) use (& $infos){
 
+            $fullContent = $node->text();
+            $textLabel = null;
+            $value = null;
+            
+            $node->filter('span')->eq(0)->each(function($subNode) use (& $value)
+            {
+                $value = $subNode->text();
+            });
+            $textLabel = str_replace($value, '', $fullContent);
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
 
         $infos['uri'] = $crawler->getUri();
         $price = $this->ecomPriceService->getPrice($infos['uri']);
@@ -1648,11 +1683,13 @@ class EcomInfo
             case 'Consommation d\'énergie':
             case 'Consommation d\'énergie (Norme EN 153)':
             case 'Consommation d\'énergie annuelle (en kWh)':
+            case 'Consommation annuelle d\'énergie de lavage (kWh)':
                 $infos['annualConsumtion'] = $this->cleanAnnualConsumtion($value);
                 break;
             case 'Consommation d\'eau en lavage':
             case 'Consommation d\'eau annuelle':
             case 'Consommation d\'eau':
+            case 'Consommation annuelle d\'eau de lavage (L)':
                 $infos['annualWaterConsumtion'] = $this->cleanAnnualConsumtion($value);
                 break;
             case 'Nombre de couverts':
@@ -1666,6 +1703,7 @@ class EcomInfo
             case 'Niveau sonore':
             case 'Niveau sonore (Norme EN 60704-3)':
             case 'Niveau Sonore (dB)':
+            case 'Niveau sonore (dB)':
                 $infos['bruit'] = $this->cleanBruit($value);
                 break;
             case 'Contenance':
@@ -1697,6 +1735,7 @@ class EcomInfo
             case 'Efficacité énergétique (10 niveaux)':
             case 'Efficacité énergétique':
             case 'Ecolabel d\'énergie':
+            case 'Classe':
                 $infos['energyClass'] = $this->cleanEnergyClass($value);
                 break;
 
@@ -1733,6 +1772,7 @@ class EcomInfo
                 break;
             case 'Vitesse d\'essorage':
             case 'Essorage':
+            case 'Vitesse de rotation maximale (tr/min)':
                 $infos['vitesseEssorage'] = $this->cleanSpeed($value);
                 break;
 
@@ -1776,11 +1816,13 @@ class EcomInfo
             case 'Capacité maximale au lavage':
             case 'Capacité de chargement':
             case 'CapacitéKg':
+            case 'Capacité du tambour (kg)':
                 $infos['capacityKg'] = $this->cleanKg($value);
                 break;
             case 'Volume du tambour':
             case 'Volume du tambour':
             case 'CapacitéVolume':
+            
                 $infos['capacityVolume'] = $this->cleanVolume($value);
                 break;
             case 'Niveau sonore en lavage':

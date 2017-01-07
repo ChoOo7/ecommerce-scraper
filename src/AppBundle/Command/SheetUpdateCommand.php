@@ -177,7 +177,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we can fill it with : ';
                                     foreach($detectedValues as $provider => $value)
                                     {
-                                        $link = array_key_exists($localIndex, $readedInfos['uri']) ? $readedInfos['uri'][$localIndex] : null;
+                                        $link = array_key_exists($localIndex, $detectedInfos['uri']) ? $detectedInfos['uri'][$provider] : null;
 
                                         $column = $columnIndexes[$columnName];
                                         $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
@@ -220,7 +220,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' : actualValue : ' . $actualValue . '. Detected value : ';
                                     foreach($detectedValues as $provider => $value)
                                     {
-                                        $link = $readedInfos['uri'][$localIndex];
+                                        //$link = $readedInfos['uri'][$localIndex];
+                                        $link = array_key_exists($localIndex, $detectedInfos['uri']) ? $detectedInfos['uri'][$provider] : null;
 
                                         $column = $columnIndexes[$columnName];
                                         $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
@@ -547,8 +548,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         foreach($tos as $to)
         {
             $email->addTo($to)->setFrom($from)->setSubject($subject)->setHtml($body);
-
-            $resp = $this->sendGrid->send($email);
-        }        
+        }
+        $resp = $this->sendGrid->send($email);
     }
 }
