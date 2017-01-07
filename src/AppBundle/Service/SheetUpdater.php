@@ -99,7 +99,6 @@ class SheetUpdater
 
     public function setSheetValue($spreadsheetId, $cellIdentifier, $cellValue, $sheetId = null)
     {
-        return ;
         if($sheetId)
         {
             $cellIdentifier = $sheetId.'!'.$cellIdentifier;
