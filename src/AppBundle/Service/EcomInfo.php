@@ -242,7 +242,7 @@ class EcomInfo
 
         if($searchUrl != $crawler->getUri() && $searchUrl2 != $crawler->getUri())
         {
-            $infos['uri'] = $crawler->get();
+            $infos['uri'] = $crawler->getUri();
             $price = $this->ecomPriceService->getPrice($infos['uri']);
             if ($price)
             {
