@@ -252,7 +252,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
                         {
                             if($newPrice)
                             {
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from '.$actualPrice.' to '.$newPrice.' on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$readedInfos['uri'][$localIndex].'</a>';
+                                $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
+                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from '.$actualPrice.' to '.$newPrice.' on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a>';
                                 $this->errors[] = $errorMessage;
                                 $this->output->writeln($errorMessage);
 
