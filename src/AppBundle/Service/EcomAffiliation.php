@@ -35,6 +35,18 @@ class EcomAffiliation
             case 'www.boulanger.com':
                 return $this->getAffiliationForBoulanger($url);
 
+            case 'www.rueducommerce.fr':
+            case 'www.rueducommerce.com':
+                return $this->getAffiliationForRueDuCommerce($url);
+
+            case 'www.but.fr':
+            case 'www.but.com':
+                return $this->getAffiliationForBut($url);
+            
+            case 'www.conforama.fr':
+            case 'www.conforama.com':
+                return $this->getAffiliationForConforama($url);
+
             case 'www.amazon.fr':
             case 'www.amazon.com':
                 return $this->getAffiliationForAmazon($url);
@@ -43,6 +55,26 @@ class EcomAffiliation
     }
 
     protected function getAffiliationForBoulanger($url)
+    {
+        return $this->getEffiliationLink($url);
+    }
+
+    protected function getAffiliationForRueDuCommerce($url)
+    {
+        return $this->getEffiliationLink($url);
+    }
+
+    protected function getAffiliationForBut($url)
+    {
+        return $this->getEffiliationLink($url);
+    }
+
+    protected function getAffiliationForConforama($url)
+    {
+        return $this->getEffiliationLink($url);
+    }
+
+    protected function getEffiliationLink($url)
     {
         return "http://track.effiliation.com/servlet/effi.redir?id_compteur=16300285&url=".urlencode($url);
     }

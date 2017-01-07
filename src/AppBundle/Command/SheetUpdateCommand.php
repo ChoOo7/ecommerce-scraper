@@ -162,7 +162,6 @@ class SheetUpdateCommand extends ContainerAwareCommand
                             $theyAgree = true;
                             foreach ($detectedValues as $provider => $value)
                             {
-                                //TODO : setValue
                                 if($newValue == null)
                                 {
                                     $newValue = $value;
@@ -194,6 +193,9 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     
                                     $column = $columnIndexes[$columnName];
                                     $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newValue, $sheet['title']);
+                                    
+                                    $column = $columnIndexes['lastUpdateDate'];
+                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, date('Y-m-d H:i:s'), $sheet['title']);
                                 }                                                                
                             }                            
                         }else
@@ -244,6 +246,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
 
                                 $column = $columnIndexes['price'];
                                 $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newPrice, $sheet['title']);
+                                $column = $columnIndexes['lastUpdateDate'];
+                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, date('d/m/Y H:i:s'), $sheet['title']);
                             }else{
                                 if($doRemovePrice)
                                 {
@@ -259,6 +263,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '', $sheet['title']);
                                     $column = $columnIndexes['uri'];
                                     $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, '', $sheet['title']);
+                                    $column = $columnIndexes['lastUpdateDate'];
+                                    $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, date('Y-m-d H:i:s'), $sheet['title']);                                    
                                 }else{
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$readedInfos['uri'][$localIndex].'</a>';
 
@@ -272,6 +278,10 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $this->output->writeln($errorMessage);
                                 }
                             }
+                        }else{
+                            //le prix ne change pas
+                            $column = $columnIndexes['lastUpdateDate'];
+                            $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, date('Y-m-d H:i:s'), $sheet['title']);
                         }
                     }
 
@@ -354,7 +364,10 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $associations['brand'] = array("brand");
         $associations['model'] = array("model");
         $associations['ean'] = array("ean");
+        $associations['image_url'] = array("image_url");
+        $associations['image_energy_url'] = array("image_energy_url");
         $associations['energyClass'] = array("class");
+        $associations['lastUpdateDate'] = array("Date MAJ Prix");
         
         switch($category)
         {

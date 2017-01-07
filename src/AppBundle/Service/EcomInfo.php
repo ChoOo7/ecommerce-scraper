@@ -83,7 +83,7 @@ class EcomInfo
                 {
                     foreach ($infosBis as $k => $v)
                     {
-                        if (!array_key_exists($k, $infos))
+                        if ( ! array_key_exists($k, $infos))
                         {
                             $infos[$k] = array();
                         }
@@ -94,6 +94,7 @@ class EcomInfo
             catch(\Exception $e)
             {
                 echo "\nError getting info : ".$e->getMessage();
+                var_dump($e->getTraceAsString());
             }
         }
         if(array_key_exists('uri', $infos))
@@ -108,6 +109,7 @@ class EcomInfo
     
     protected function getProvidersOfType($productType)
     {
+        return array('Darty', 'But');
         switch($productType)
         {
             case 'pneu':
@@ -115,7 +117,7 @@ class EcomInfo
 //                return array('AlloPneus');
 
             default:
-                return array('Darty', 'EanFind', 'EanSearch', 'IdealPrice', 'VillaTech', 'Boulanger', 'EanFind', 'WebDistrib', 'Amazon', 'ElectroDepot', 'RueDuCommerce', 'TousPourUnPrix', 'PriceMinister', 'MisterGoodDeal', 'CDiscount', 'Arredatutto', 'Conforama', 'ElectroMenagerCompare', 'Ubaldi');
+                return array('Darty', 'But', 'EanFind', 'EanSearch', 'IdealPrice', 'VillaTech', 'Boulanger', 'EanFind', 'WebDistrib', 'Amazon', 'ElectroDepot', 'RueDuCommerce', 'TousPourUnPrix', 'PriceMinister', 'MisterGoodDeal', 'CDiscount', 'Arredatutto', 'Conforama', 'ElectroMenagerCompare', 'Ubaldi');
         }
         return array();
     }
@@ -148,6 +150,17 @@ class EcomInfo
                 $infos['model'] = $tmp;
             }
         });
+
+        $crawler->filter('.darty_product_picture_main_pic img')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infos['image_url'] = $node->attr('src');
+            if($infos['image_url']{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url']; 
+            }
+        });
+        
 
         $crawler->filter('#darty_product_brand')->each(function ($node) use (& $infos)
         {
@@ -283,6 +296,15 @@ class EcomInfo
         });
 
 
+        $crawler->filter('#photo img')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infos['image_url'] = $node->attr('src');
+            if($infos['image_url']{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url'];
+            }
+        });
 
         $crawler->filter('#caracteristiques tr')->each(function ($node) use (& $infos, $productType){
 
@@ -392,6 +414,29 @@ class EcomInfo
             $infos['model'] = trim(str_replace($infos['brand'], '', $node->attr("alt")));
         });
 
+
+        $crawler->filter('#default-viewer-pp-picture')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infos['image_url'] = $node->attr('src');
+            if($infos['image_url']{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url'];
+            }
+        });
+
+        $crawler->filter('#zoomEnergy .picto img')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infoKey = 'image_energy_url';
+            $infos[$infoKey] = $node->attr('src');
+            if($infos[$infoKey]{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos[$infoKey] = $tmp['scheme'].'://'.$tmp['host'].$infos[$infoKey];
+            }
+        });
+
+
         $crawler->filter('table.characteristic tr')->each(function ($node) use (& $infos, $productType){
 
             $textLabel = null;
@@ -415,7 +460,7 @@ class EcomInfo
                 $index++;
             });
             $textLabel = trim(str_replace('Aide', '', $textLabel));
-            
+
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
         });
         if($productType == 'machinealaver')
@@ -430,6 +475,83 @@ class EcomInfo
                 }
             });
         }
+
+        if($crawler->getUri() != $url)
+        {
+            $infos['uri'] = $crawler->getUri();
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+
+        return $infos;
+    }
+
+
+    protected function getInfosOfFromBut($ean, $productType, $parametersInfos)
+    {
+        $infos = array();
+        $infos['ean'] = $ean;
+
+        $url = 'http://www.but.fr/recherche/resultat-recherche.php?searchSparkowCategoryId=&searchSparkowCategoryUrl=&recherche='.urlencode($ean);
+
+        $client = new \Goutte\Client();
+        $crawler = $client->request('GET', $url);
+
+        $crawler->filter('[data-flix-brand]')->each(function ($node) use (& $infos){
+            $infos['brand'] = $node->attr('data-flix-brand');
+        });
+        $crawler->filter('[itemprop="name"]')->eq(0)->each(function ($node) use (& $infos){
+            $fullName = $node->text();
+            $tmp = explode($infos['brand'], $fullName);
+            if(count($tmp) == 2)
+            {
+                $infos['model'] = trim($tmp[1]);
+            }
+        });
+
+        $crawler->filter('#thumblist a')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $rel = $node->attr('rel');
+            $tmp = explode('largeimage:', $rel);
+            $url = $tmp[1];
+            $url = trim(trim(trim($url), "'} "));
+            $infos['image_url'] = $url;
+            if(strlen($infos['image_url']) && $infos['image_url']{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url'];
+            }
+        });
+
+        $crawler->filter('#caracteristiques tr')->each(function ($node) use (& $infos, $productType){
+
+            $textLabel = null;
+            $value = null;
+            $index = 0;
+            $node->filter('td')->each(function($subNode) use (&$textLabel, & $value, &$index, $productType) {
+                if($index == 0)
+                {
+                    $textLabel = trim($subNode->text());
+                }else{
+                    $value = trim($subNode->text());
+                }
+                $textLabel = trim($textLabel);
+                if($textLabel == "Volume utile" && $productType == "frigo")
+                {
+                    $tbody = $subNode->parents('tbody')->eq(0);
+                    $previousCatName = $tbody->parents()->previousAll()->text();
+                    $previousCatName = trim($previousCatName);
+                    $textLabel = "Volume utile ".$previousCatName;
+                }
+                $index++;
+            });
+            $textLabel = trim(str_replace('Aide', '', $textLabel));
+
+            $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
 
         if($crawler->getUri() != $url)
         {
@@ -670,6 +792,19 @@ class EcomInfo
             return null;
         }
 
+
+        $crawler->filter('.prdGallery img')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infoKey = 'image_url';
+            $infos[$infoKey] = $node->attr('pagespeed_lazy_src');
+            if($infos[$infoKey]{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos[$infoKey] = $tmp['scheme'].'://'.$tmp['host'].$infos[$infoKey];
+            }
+        });
+
+
         $client = new \Goutte\Client();
         $client->setClient($torGuzzleClient);
         $crawler = $client->request('GET', $newUrl);
@@ -719,6 +854,17 @@ class EcomInfo
             $crawler = $client->request('GET', $newUrl);
         }
 
+
+        $crawler->filter('#product-img img')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infoKey = 'image_url';
+            $infos[$infoKey] = $node->attr('src');
+            if($infos[$infoKey]{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos[$infoKey] = $tmp['scheme'].'://'.$tmp['host'].$infos[$infoKey];
+            }
+        });
 
         $crawler->filter('#div-description tr')->each(function ($node) use (& $infos){
             $textLabel = null;
@@ -787,6 +933,17 @@ class EcomInfo
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
         });
 
+        $crawler->filter('#mainImageContainer img')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infoKey = 'image_url';
+            $infos[$infoKey] = $node->attr('src');
+            if($infos[$infoKey]{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos[$infoKey] = $tmp['scheme'].'://'.$tmp['host'].$infos[$infoKey];
+            }
+        });
+
         if($crawler->getUri() != $url)
         {
             $infos['uri'] = $crawler->getUri();
@@ -853,6 +1010,17 @@ class EcomInfo
             });
             $textLabel = trim(str_replace('Aide', '', $textLabel));
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
+
+
+        $crawler->filter('#imgTagWrapperId img')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infos['image_url'] = $node->attr('data-old-hires');
+            if($infos['image_url']{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url'];
+            }
         });
 
         $infos['uri'] = $crawler->getUri();
@@ -972,6 +1140,11 @@ class EcomInfo
             return null;
         }
 
+        if(stripos($crawler->getUri(), 'search_retry') !== false)
+        {
+            return null;
+        }
+
         if($crawler->getUri() == $url)
         {
             $newUrl = null;
@@ -1023,6 +1196,22 @@ class EcomInfo
             });
             $textLabel = trim(str_replace('Aide', '', $textLabel));
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
+
+
+        $crawler->filter('.zoomContainer img')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $infoKey = 'image_url';
+            $infos[$infoKey] = $node->attr('src');
+            if($infos[$infoKey]{0} == '/' && $infos[$infoKey]{1} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos[$infoKey] = $tmp['scheme'].$infos[$infoKey];
+            }elseif($infos[$infoKey]{0} == '/')
+            {
+                $tmp = parse_url($crawler->getUri());
+                $infos[$infoKey] = $tmp['scheme'].'://'.$tmp['host'].$infos[$infoKey];
+            }
         });
 
 
@@ -1502,6 +1691,7 @@ class EcomInfo
                 $infos['largeur'] = $this->cleanLargeur($value);
                 break;
             case 'Classe d\'efficacité énergétique':
+            
             case 'Classe énergie':
             case 'Classe énergétique':
             case 'Efficacité énergétique (10 niveaux)':
