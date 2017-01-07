@@ -182,13 +182,14 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                         $column = $columnIndexes[$columnName];
                                         $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
                                         
-                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="'.$updateUrl.'">CHOOSE IT</a>'.($link ?  ' ( '.$link.' )' : '');
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="'.$updateUrl.'">CHOOSE IT</a>'.($link ?  ' ( <a href="'.$link.'">view website</a>" )' : '');
                                     }
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
                                 }else{
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we fill it with : '.$newValue. ' ('.count($detectedValues).' concordant infos)';
                                     $this->errors[] = $errorMessage;
+                                    
                                     $this->output->writeln($errorMessage);
                                     
                                     $column = $columnIndexes[$columnName];
@@ -226,7 +227,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                         $column = $columnIndexes[$columnName];
                                         $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
                                         
-                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="'.$updateUrl.'">CHOOSE IT</a> ( '.$link.' )';
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="'.$updateUrl.'">CHOOSE IT</a> ( <a href="'.$link.'>view website</a> )';
                                     }
                                 }
                             }
@@ -252,7 +253,9 @@ class SheetUpdateCommand extends ContainerAwareCommand
                             }else{
                                 if($doRemovePrice)
                                 {
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url '.$readedInfos['uri'][$localIndex].', we remove link and price';
+                                    $_uri = $readedInfos['uri'][$localIndex];
+                                    $hostname = parse_url($_uri, PHP_URL_HOST);
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$_uri.'">'.$hostname.'</a>, we remove link and price';
 
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
@@ -267,7 +270,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $column = $columnIndexes['lastUpdateDate'];
                                     $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, date('Y-m-d H:i:s'), $sheet['title']);                                    
                                 }else{
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$readedInfos['uri'][$localIndex].'</a>';
+                                    $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a>';
 
                                     $columnPrice = $columnIndexes['price'];
                                     $columnUri = $columnIndexes['uri'];
@@ -304,7 +308,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 $brand = (string)$brand;
                                 $model = (string)$model;
                                 
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' .$brand.' - '.$model. ' -  we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a href="'.$newUrl.'">' . $newUrl.'</a>';
+                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' .$brand.' - '.$model. ' -  we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a href="'.$newUrl.'">view website</a>';
                                 
                                 $column = $columnIndexes['price'];
                                 $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $proposedPrice, $sheet['title']);
