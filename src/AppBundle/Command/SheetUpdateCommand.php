@@ -138,6 +138,15 @@ class SheetUpdateCommand extends ContainerAwareCommand
                     $globalLineNumber = $lineNumber + $localIndex;
                     $detectedInfos = $ecomInfoSer->getInfos($ean, $category);
                     
+                    $linksInfos = '';
+                    if(array_key_exists('uri', $detectedInfos))
+                    {
+                        foreach ($detectedInfos['uri'] as $provider => $_uri)
+                        {
+                            $linksInfos .= ' <a href="' . $_uri . '">' . $provider . '</a>';
+                        }
+                    }
+                    
                     //On recherche si l'on a des informations différentes ou si des infos sont manquantes
                     foreach($detectedInfos as $columnName=>$detectedValues)
                     {
@@ -188,6 +197,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $this->output->writeln($errorMessage);
                                 }else{
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we fill it with : '.$newValue. ' ('.count($detectedValues).' concordant infos)';
+                                    $errorMessage .= ' <br /> '.$linksInfos;
                                     $this->errors[] = $errorMessage;
                                     
                                     $this->output->writeln($errorMessage);
@@ -256,6 +266,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $_uri = $readedInfos['uri'][$localIndex];
                                     $hostname = parse_url($_uri, PHP_URL_HOST);
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$_uri.'">'.$hostname.'</a>, we remove link and price';
+                                    $errorMessage .= ' <br /> '.$linksInfos;
 
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
@@ -272,6 +283,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 }else{
                                     $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a>';
+                                    $errorMessage .= ' <br /> '.$linksInfos;
 
                                     $columnPrice = $columnIndexes['price'];
                                     $columnUri = $columnIndexes['uri'];
@@ -309,6 +321,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 $model = (string)$model;
                                 
                                 $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' .$brand.' - '.$model. ' -  we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a href="'.$newUrl.'">view website</a>';
+                                $errorMessage .= ' <br /> '.$linksInfos;
                                 
                                 $column = $columnIndexes['price'];
                                 $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $proposedPrice, $sheet['title']);

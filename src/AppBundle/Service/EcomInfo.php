@@ -79,7 +79,7 @@ class EcomInfo
             {
                 $methodName = "getInfosOfFrom" . ucfirst($provider);
                 $infosBis = $this->$methodName($ean, $productType, $infos);
-                if ($infosBis !== null)
+                if ($infosBis !== null && is_array($infosBis))
                 {
                     foreach ($infosBis as $k => $v)
                     {
@@ -242,7 +242,7 @@ class EcomInfo
 
         if($searchUrl != $crawler->getUri() && $searchUrl2 != $crawler->getUri())
         {
-            $infos['uri'] = $crawler->getUri();
+            $infos['uri'] = $crawler->get();
             $price = $this->ecomPriceService->getPrice($infos['uri']);
             if ($price)
             {
@@ -1016,7 +1016,7 @@ class EcomInfo
         $crawler->filter('#imgTagWrapperId img')->eq(0)->each(function ($node) use (& $infos, $crawler)
         {
             $infos['image_url'] = $node->attr('data-old-hires');
-            if($infos['image_url']{0} == '/')
+            if(strlen($infos['image_url']) && $infos['image_url']{0} == '/')
             {
                 $tmp = parse_url($crawler->getUri());
                 $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url'];
