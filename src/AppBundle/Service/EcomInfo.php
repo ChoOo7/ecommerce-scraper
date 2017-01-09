@@ -87,7 +87,7 @@ class EcomInfo
                         {
                             $infos[$k] = array();
                         }
-                        $infos[$k][$provider] = $v;
+                        $infos[$k][$provider] = trim($v);
                     }
                 }
             }
@@ -997,8 +997,14 @@ class EcomInfo
         $crawler->filter('#result_0 a')->eq(0)->each(function ($node) use (& $newUrl){
             $newUrl = $node->attr('href');
         });
+        if($crawler->filter('h1#noResultsTitle')->count() >= 1)
+        {
+            //true no result
+            return array();
+        }
         if($newUrl == null && $tryLeft > 0)
         {
+            echo($crawler->html());
             sleep(6-$tryLeft);
             $tryLeft--;
             echo "\nretrying getInfosOfFromAmazon";
@@ -1742,6 +1748,7 @@ class EcomInfo
             case 'Consommation d\'eau annuelle':
             case 'Consommation d\'eau':
             case 'Consommation annuelle d\'eau de lavage (L)':
+            case 'Conso. eau annuelle (L)':
                 $infos['annualWaterConsumtion'] = $this->cleanAnnualConsumtion($value);
                 break;
             case 'Nombre de couverts':
@@ -1886,6 +1893,7 @@ class EcomInfo
             case 'Niveau sonore à l\'essorage':
             case 'BruitEssorage':
             case 'Niveau sonore en mode essorage':
+            case 'Niveau sonore essorage (dB)':
                 $infos['bruitEssorage'] = $this->cleanBruit($value);
                 break;
             case '':

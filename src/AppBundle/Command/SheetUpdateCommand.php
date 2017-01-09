@@ -440,7 +440,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
             
             case 'machinealaver':
                 $associations['annualConsumtion'] = array("Conso");
-                //$associations['annualWaterConsumtion'] = array("L/annum");
+                $associations['annualWaterConsumtion'] = array("L/annum");
                 $associations['capacityKg'] = array("Capacité (kg)");
                 $associations['qualiteEssorage'] = array("Efficacité d'essorage");
                 $associations['bruitLavage'] = array("Bruit au lavage (dB)");
