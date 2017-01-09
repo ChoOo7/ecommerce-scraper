@@ -552,6 +552,10 @@ class EcomInfo
 
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
         });
+        if(array_key_exists('ean', $infos) && $infos['ean'] != $ean)
+        {
+            return array();
+        }
 
         if($crawler->getUri() != $url)
         {
@@ -793,6 +797,11 @@ class EcomInfo
         }
 
 
+        $client = new \Goutte\Client();
+        $client->setClient($torGuzzleClient);
+        $crawler = $client->request('GET', $newUrl);
+
+
         $crawler->filter('.prdGallery img')->eq(0)->each(function ($node) use (& $infos, $crawler)
         {
             $infoKey = 'image_url';
@@ -804,10 +813,6 @@ class EcomInfo
             }
         });
 
-
-        $client = new \Goutte\Client();
-        $client->setClient($torGuzzleClient);
-        $crawler = $client->request('GET', $newUrl);
 
         $price = $this->ecomPriceService->getPrice($crawler->getUri());
         if ($price)
@@ -877,6 +882,20 @@ class EcomInfo
                 $value = trim($subNode->text());
             });
             $infos = $this->aspirateurGetInfosFromLabel($infos, $textLabel, $value);
+        });
+
+
+        $crawler->filter('h1[itemprop="name"]')->eq(0)->each(function ($node) use (& $infos, $crawler)
+        {
+            $value = $node->text();
+            if(array_key_exists('brand', $infos))
+            {
+                $tmp = explode($infos['brand'], $value);
+                if(count($tmp) >=2)
+                {
+                    $infos['model'] = trim($tmp[1]);
+                }
+            }
         });
 
         if($crawler->getUri() != $url)
@@ -1015,8 +1034,34 @@ class EcomInfo
 
         $crawler->filter('#imgTagWrapperId img')->eq(0)->each(function ($node) use (& $infos, $crawler)
         {
-            $infos['image_url'] = $node->attr('data-old-hires');
-            if(strlen($infos['image_url']) && $infos['image_url']{0} == '/')
+            $tmp = $node->attr('data-old-hires');
+            if($tmp)
+            {
+                $infos['image_url'] = $tmp;
+            }else{
+                $tmp = $node->attr('data-a-dynamic-image');
+                $tmp2 = @json_decode($tmp, true);
+                if(is_array($tmp2) && ! empty($tmp2))
+                {
+                    $tmp = array_keys($tmp2);
+                    $tmp = $tmp[0];
+                }else
+                {
+                    $tmp = explode('&quot;', $tmp);
+                    if (count($tmp) >= 2)
+                    {
+                        $tmp = $tmp[count($tmp) - 2];
+                    } else
+                    {
+                        $tmp = "";
+                    }
+                }
+                if($tmp)
+                {
+                    $infos['image_url'] = $tmp;
+                }
+            }
+            if(array_key_exists('iamge_url', $infos) && strlen($infos['image_url']) && $infos['image_url']{0} == '/')
             {
                 $tmp = parse_url($crawler->getUri());
                 $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url'];
@@ -1262,7 +1307,13 @@ class EcomInfo
             {
                 $newUrl = $node->attr('href');
             });
-            if ($newUrl == null || stripos($newUrl, $brand) === false  || stripos($newUrl, $model) === false)
+            var_dump($newUrl);
+            var_dump($model);
+            if ($newUrl == null)
+            {
+                return null;
+            }
+            if ( ! $this->urlMatchModel($newUrl, $model))
             {
                 return null;
             }
@@ -1659,6 +1710,9 @@ class EcomInfo
             case 'Efficacité aspiration sol dur':
             case 'Efficacité aspiration sols durs':
                 $infos['solDur'] = $value;
+                break;
+            case 'Ean':
+                $infos['ean'] = $value;
                 break;
             case 'Efficacité moquette':
             case 'Classe d\'éfficacité tapis':

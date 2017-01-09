@@ -187,16 +187,28 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     foreach($detectedValues as $provider => $value)
                                     {
                                         $link = array_key_exists($localIndex, $detectedInfos['uri']) ? $detectedInfos['uri'][$provider] : null;
+                                        
+                                        $formatedValue = $value;
+                                        if(in_array($columnName, array('image_url', 'image_energy_url')))
+                                        {
+                                            $formatedValue = '<a href="'.$value.'"><img src="'.$value.'" width="100" alt="view image" /></a>';
+                                        }
 
                                         $column = $columnIndexes[$columnName];
                                         $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
                                         
-                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="'.$updateUrl.'">CHOOSE IT</a>'.($link ?  ' ( <a href="'.$link.'">view website</a>" )' : '');
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$formatedValue .' <a href="'.$updateUrl.'">CHOOSE IT</a>'.($link ?  ' ( <a href="'.$link.'">view website</a>" )' : '');
                                     }
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
                                 }else{
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we fill it with : '.$newValue. ' ('.count($detectedValues).' concordant infos)';
+                                    $formatedValue = $newValue;
+                                    if(in_array($columnName, array('image_url', 'image_energy_url')))
+                                    {
+                                        $formatedValue = '<a href="'.$newValue.'"><img src="'.$newValue.'" width="100" alt="view image" /></a>';
+                                    }
+                                    
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we fill it with : '.$formatedValue. ' ('.count($detectedValues).' concordant infos)';
                                     $errorMessage .= ' <br /> '.$linksInfos;
                                     $this->errors[] = $errorMessage;
                                     
@@ -252,15 +264,28 @@ class SheetUpdateCommand extends ContainerAwareCommand
                         {
                             if($newPrice)
                             {
-                                $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from '.$actualPrice.' to '.$newPrice.' on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a>';
-                                $this->errors[] = $errorMessage;
-                                $this->output->writeln($errorMessage);
+                                $variationIsOk = $actualPrice == 0 || (abs(($newPrice - $actualPrice) / $actualPrice) < 0.3);
+                                if($variationIsOk)
+                                {
+                                    $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from ' . $actualPrice . ' to ' . $newPrice . ' on url <a href="' . $readedInfos['uri'][$localIndex] . '">' . $hostname . '</a>';
+                                    $this->errors[] = $errorMessage;
+                                    $this->output->writeln($errorMessage);
 
-                                $column = $columnIndexes['price'];
-                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newPrice, $sheet['title']);
-                                $column = $columnIndexes['lastUpdateDate'];
-                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, date('d/m/Y H:i:s'), $sheet['title']);
+                                    $column = $columnIndexes['price'];
+                                    $ecomSheet->setSheetValue($docId, $column . $globalLineNumber, $newPrice, $sheet['title']);
+                                    $column = $columnIndexes['lastUpdateDate'];
+                                    $ecomSheet->setSheetValue($docId, $column . $globalLineNumber, date('d/m/Y H:i:s'), $sheet['title']);
+                                }else{
+                                    $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' price from ' . $actualPrice . ' to ' . $newPrice . ' on url <a href="' . $readedInfos['uri'][$localIndex] . '">' . $hostname . '</a>';
+                                    
+                                    $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$newPrice));
+                                    $errorMessage .= '<br /><a href="'.$updateUrl.'">confirm and set new price</a>';
+                                    
+                                    $this->errors[] = $errorMessage;
+                                    $this->output->writeln($errorMessage);
+                                }
                             }else{
                                 if($doRemovePrice)
                                 {
@@ -311,24 +336,39 @@ class SheetUpdateCommand extends ContainerAwareCommand
                         {
                             if ($proposedPrice > 0 && ($proposedPrice < $actualPrice || $actualPrice === null))
                             {
-                                $actualPrice = $proposedPrice;
+                                $newPrice = $proposedPrice;
+                                $variationIsOk = $actualPrice == 0 || (abs(($newPrice - $actualPrice) / $actualPrice) < 0.3);
+
                                 $newUrl = $detectedInfos['uri'][$provider];
                                 $newUrl = $ecomAffiSer->getNewUrl($newUrl);
 
                                 $brand = array_key_exists('brand', $readedInfos) && array_key_exists($localIndex, $readedInfos['brand']) ? $readedInfos['brand'][$localIndex] : null;
                                 $model = array_key_exists('model', $readedInfos) && array_key_exists($localIndex, $readedInfos['model']) ? $readedInfos['model'][$localIndex] : null;
-                                
+
                                 $brand = (string)$brand;
                                 $model = (string)$model;
+
+                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $brand . ' - ' . $model . ' -  we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a href="' . $newUrl . '">view website</a>';
                                 
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' .$brand.' - '.$model. ' -  we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a href="'.$newUrl.'">view website</a>';
-                                $errorMessage .= ' <br /> '.$linksInfos;
                                 
-                                $column = $columnIndexes['price'];
-                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $proposedPrice, $sheet['title']);
-                                
-                                $column = $columnIndexes['uri'];
-                                $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, $newUrl, $sheet['title']);
+                                if($variationIsOk)
+                                {
+                                    $errorMessage .= '=> document auto updated';
+                                    $actualPrice = $proposedPrice;
+
+                                    $column = $columnIndexes['price'];
+                                    $ecomSheet->setSheetValue($docId, $column . $globalLineNumber, $proposedPrice, $sheet['title']);
+
+                                    $column = $columnIndexes['uri'];
+                                    $ecomSheet->setSheetValue($docId, $column . $globalLineNumber, $newUrl, $sheet['title']);
+                                }else{
+                                    $columnPrice = $columnIndexes['price'];
+                                    $columnUri = $columnIndexes['uri'];
+                                    
+                                    $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($columnPrice.$globalLineNumber=>'', $columnUri.$globalLineNumber=>''));
+                                    $errorMessage .= '<br /><a href="'.$updateUrl.'">confirm and set price and link</a>';
+                                }
+                                $errorMessage .= ' <br /> ' . $linksInfos;
                             }
                         }
                     }
