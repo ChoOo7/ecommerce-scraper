@@ -1307,8 +1307,6 @@ class EcomInfo
             {
                 $newUrl = $node->attr('href');
             });
-            var_dump($newUrl);
-            var_dump($model);
             if ($newUrl == null)
             {
                 return null;
