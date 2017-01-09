@@ -291,7 +291,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 {
                                     $_uri = $readedInfos['uri'][$localIndex];
                                     $hostname = parse_url($_uri, PHP_URL_HOST);
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$_uri.'">'.$hostname.'</a>, we remove link and price. (google sheet price : '.((string)$actualPrice.')';
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$_uri.'">'.$hostname.'</a>, we remove link and price. (google sheet price : '.((string)$actualPrice).')';
                                     $errorMessage .= ' <br /> '.$linksInfos;
 
                                     $this->errors[] = $errorMessage;
@@ -308,7 +308,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, date('Y-m-d H:i:s'), $sheet['title']);                                    
                                 }else{
                                     $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a> (google sheet price : '.((string)$actualPrice.')';
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a> (google sheet price : '.((string)$actualPrice).')';
                                     $errorMessage .= ' <br /> '.$linksInfos;
 
                                     $columnPrice = $columnIndexes['price'];
