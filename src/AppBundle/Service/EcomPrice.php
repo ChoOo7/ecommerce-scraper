@@ -25,7 +25,7 @@ class EcomPrice
     /**
      * {@inheritDoc}
      */
-    public function getPrice($url, $tryLeft = 3)
+    public function getPrice($url, $tryLeft = 6)
     {
         $price = null;
         $hostname = parse_url($url, PHP_URL_HOST);
@@ -152,10 +152,13 @@ class EcomPrice
         }
         catch(\Exception $e)
         {
-            echo "\nError getting price : ".$e->getMessage();
+            sleep(10-$tryLeft);
+            $tryLeft++;
+            echo "\nError getting price : ".$e->getMessage()." - sleeping ".(6-$tryLeft);
         }
         if(( empty($price) || $price < 0 ) && $tryLeft > 0)
         {
+            $tryLeft--;
             $tryLeft--;
             return $this->getPrice($url, $tryLeft);
         }
@@ -321,6 +324,13 @@ class EcomPrice
         $client = new \Goutte\Client();
         $client->setClient($torGuzzleClient);
         $crawler = $client->request('GET', $url);
+
+        if(stripos($crawler->text(), 'il faut que nous nous assurions que vous n\'êtes pas un robot') !== false)
+        {
+            //TODO : Custom exception
+            throw new \Exception("RobotExceptionPriceMinister");
+        }
+        
         $crawler->filter('.gsRow .col-xs-6.prdInfos .price.spacerBottomXs')->eq(0)->each(function ($node) use (& $price){
             $price = ($node->text());
         });

@@ -40,8 +40,9 @@
                             Category
                         </label>
                         <select name="category" id="find_category">
-                            <option value="aspirateur">Aspirateur</option>
-                            <option value="machinealaver">Machine à laver</option>
+                            {% for docId, docName in docs %}
+                                <option value="{{ docName }}">{{ docName }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="form-row">

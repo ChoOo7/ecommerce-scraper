@@ -109,6 +109,7 @@ class EcomInfo
     
     protected function getProvidersOfType($productType)
     {
+        //return array('Darty');
         switch($productType)
         {
             case 'pneu':
@@ -196,10 +197,10 @@ class EcomInfo
             }
             if(trim($node->text()) == 'Lave vaisselle encastrable')
             {
-                $infos['pose']='Intégrable';
+                $infos['pose']='encastrable';
             }elseif(trim($node->text()) == 'Lave vaisselle')
             {
-                $infos['pose']='Pose libre';
+                $infos['pose']='libre';
             }
         });
 
@@ -233,6 +234,12 @@ class EcomInfo
                 }
             }
         });
+        
+        $crawler->filter('#header-breadcrumb-zone')->eq(0)->each(function ($node) use (& $infos, $productType){
+            $breadcrumbText = $node->text();
+            $infos = $this->getInfosFromBreadcrumb($infos, $breadcrumbText, $productType);
+        });
+        
         $crawler->filter('.product_bloc_caracteristics tr')->each(function ($node) use (& $infos){
             $textNode = $node->text();
             $textLabel = trim($node->filter('th')->text());
@@ -770,6 +777,12 @@ class EcomInfo
 
         $model = array_key_exists('model', $parametersInfos) ? $parametersInfos['model'] : null;
         $brand = array_key_exists('brand', $parametersInfos) ? $parametersInfos['brand'] : null;
+        
+        if(stripos($crawler->text(), 'il faut que nous nous assurions que vous n\'êtes pas un robot') !== false)
+        {
+            //TODO : Custom exception
+            throw new \Exception("RobotExceptionPriceMinister");
+        }
 
         $newUrl = null;
         $done = false;
@@ -1889,6 +1902,10 @@ class EcomInfo
             case 'BruitLavage':
                 $infos['bruitLavage'] = $this->cleanBruit($value);
                 break;
+            
+            case 'Type de nettoyage':
+                $infos['nettoyage'] = $this->cleanNettoyage($value);
+                break;
             case 'Niveau sonore en essorage':
             case 'Niveau sonore à l\'essorage':
             case 'BruitEssorage':
@@ -1902,7 +1919,6 @@ class EcomInfo
             case '':
                 $infos[''] = $value;
                 break;
-                
 
             case 'Récupération poussière':
                 if($value == 'Avec sac')
@@ -1938,6 +1954,22 @@ class EcomInfo
         $value = str_ireplace('db', '', $value);
         $value = str_ireplace('Maximum de ', '', $value);
         return trim($value);
+    }
+
+    protected function cleanNettoyage($value)
+    {
+        $value = trim(strtolower($value));
+        if(stripos($value, 'catelyse'))
+        {
+            return "catalyse";
+        }elseif(stripos($value, 'pyrol'))
+        {
+            return "pyrolise";
+        }elseif(stripos($value, 'manuel'))
+        {
+            return "manuel";
+        }
+        return $value;
     }
 
     protected function cleanEnergyClass($value)
@@ -2058,5 +2090,61 @@ class EcomInfo
             return true;
         }
         return false;
+    }
+    
+    protected function getInfosFromBreadcrumb($infos, $breadcrumbText, $productType)
+    {
+        if(empty($breadcrumbText))
+        {
+            return $infos;
+        }
+        if(stripos($breadcrumbText, 'encastrable'))
+        {
+            $infos['pose']='encastrable';
+        }
+        switch($productType)
+        {
+            case 'aspirateur':
+                if(stripos($breadcrumbText, 'sans sac'))
+                {
+                    $infos['sac']='sans sac';
+                }
+
+                if(stripos($breadcrumbText, 'aspirateur balai'))
+                {
+                    $infos['typeAspirateur']='aspirateur-balais';
+                }elseif(stripos($breadcrumbText, 'aspirateur à main'))
+                {
+                    $infos['typeAspirateur']='à main';
+                }elseif(stripos($breadcrumbText, 'aspirateur robot'))
+                {
+                    $infos['typeAspirateur']='robot';
+                }else{
+                    $infos['typeAspirateur']='traîneaux';
+                }
+                break;
+
+            case 'four':
+
+                if(stripos($breadcrumbText, 'four vapeur'))
+                {
+                    $infos['typeFour']='vapeur';
+                }elseif(stripos($breadcrumbText, 'mini four'))
+                {
+                    //$infos['typeFour']='mini-four';
+                }else{
+                    //$infos['typeFour']='four';
+                }
+                break;
+            case 'machinealaver':
+                if(stripos($breadcrumbText, 'ouverture dessus'))
+                {
+                    $infos['ouverture']='dessus';
+                }elseif(stripos($breadcrumbText, 'hublot'))
+                {
+                    $infos['ouverture']='hublot';
+                }
+        }
+        return $infos;
     }
 }
