@@ -224,6 +224,13 @@ class EcomPrice
         $client->setClient($torGuzzleClient);
         $client->setHeader('User-Agent', "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36");
         $crawler = $client->request('GET', $url);
+
+        if(stripos($crawler->text(), 'tes pas un robot.') !== false)
+        {
+            //TODO
+            throw new \Exception("AmazonRobotException");
+        }
+        
         $crawler->filter('#priceblock_ourprice')->each(function ($node) use (& $price){
             $price = ($node->text());
         });

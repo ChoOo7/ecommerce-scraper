@@ -1006,6 +1006,13 @@ class EcomInfo
         $client->setClient($torGuzzleClient);
         $client->setHeader('User-Agent', "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36");
         $crawler = $client->request('GET', $url);
+        
+        if(stripos($crawler->text(), 'tes pas un robot.') !== false)
+        {
+            //TODO
+            throw new \Exception("AmazonRobotException");
+        }
+        
         $newUrl = null;
         $crawler->filter('#result_0 a')->eq(0)->each(function ($node) use (& $newUrl){
             $newUrl = $node->attr('href');
@@ -1029,8 +1036,12 @@ class EcomInfo
         }
 
         sleep(rand(0,3));
-        $client = new \Goutte\Client();
         $crawler = $client->request('GET', $newUrl);
+        if(stripos($crawler->text(), 'tes pas un robot.') !== false)
+        {
+            //TODO
+            throw new \Exception("AmazonRobotException");
+        }
 
         $crawler->filter('#prodDetails table tr')->each(function ($node) use (& $infos){
 
