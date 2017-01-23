@@ -103,10 +103,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                     {
                         foreach ($_values as $v)
                         {
-                            if( ! empty($v))
-                            {
-                                $values[] = $v[0];
-                            }
+                            $values[] = empty($v) ? null : $v[0];
                         }
                     }
                     $readedInfos[$k] = $values;
@@ -365,7 +362,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $columnPrice = $columnIndexes['price'];
                                     $columnUri = $columnIndexes['uri'];
                                     
-                                    $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($columnPrice.$globalLineNumber=>'', $columnUri.$globalLineNumber=>''));
+                                    $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($columnPrice.$globalLineNumber=>$proposedPrice, $columnUri.$globalLineNumber=>$newUrl));
                                     $errorMessage .= '<br /><a href="'.$updateUrl.'">confirm and set price and link</a>';
                                 }
                                 $errorMessage .= ' <br /> ' . $linksInfos;
