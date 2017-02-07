@@ -27,13 +27,25 @@ class EcomAffiliation
      */
     public function getNewUrl($url)
     {
+        if(empty($url))
+        {
+            return $url;
+        }
         $hostname = parse_url($url, PHP_URL_HOST);
         $hostname = strtolower($hostname);
         switch($hostname)
         {
+            case 'www.darty.fr':
+            case 'www.darty.com':
+                return $this->getAffiliationForDarty($url);
+            
             case 'www.boulanger.fr':
             case 'www.boulanger.com':
                 return $this->getAffiliationForBoulanger($url);
+
+            case 'www.amazon.fr':
+            case 'www.amazon.com':
+                return $this->getAffiliationForAmazon($url);
 
             case 'www.rueducommerce.fr':
             case 'www.rueducommerce.com':
@@ -47,9 +59,19 @@ class EcomAffiliation
             case 'www.conforama.com':
                 return $this->getAffiliationForConforama($url);
 
-            case 'www.amazon.fr':
-            case 'www.amazon.com':
-                return $this->getAffiliationForAmazon($url);
+            
+            case 'www.electrodepot.fr':
+            case 'www.electrodepot.com':
+                return $this->getAffiliationForElectroDepot($url);
+            
+            
+            //SPECIAL
+            case 'www.awin1.com':
+                $sourceUrl = $this->getSourceUrlFrom($url, "p");
+                return $this->getNewUrl($sourceUrl);
+            case 'track.effiliation.com':
+                $sourceUrl = $this->getSourceUrlFrom($url, "url");
+                return $this->getNewUrl($sourceUrl);
         }
         return $url;
     }
@@ -59,24 +81,41 @@ class EcomAffiliation
         return $this->getEffiliationLink($url);
     }
 
+
+    protected function getAffiliationForDarty($url)
+    {
+        return $this->getAffiliateWindowsLink($url);
+    }
+
     protected function getAffiliationForRueDuCommerce($url)
     {
-        return $this->getEffiliationLink($url);
+        return $this->getAffiliateWindowsLink($url);
     }
 
     protected function getAffiliationForBut($url)
     {
-        return $this->getEffiliationLink($url);
+        return $this->getAffiliateWindowsLink($url);
     }
 
     protected function getAffiliationForConforama($url)
     {
+        return $this->getAffiliateWindowsLink($url);
+    }
+
+    protected function getAffiliationForElectroDepot($url)
+    {
         return $this->getEffiliationLink($url);
     }
+
 
     protected function getEffiliationLink($url)
     {
         return "http://track.effiliation.com/servlet/effi.redir?id_compteur=16300285&url=".urlencode($url);
+    }
+
+    protected function getAffiliateWindowsLink($url)
+    {
+        return "http://www.awin1.com/cread.php?awinmid=6901&awinaffid=311895&clickref=&p=".urlencode($url);
     }
 
     protected function getAffiliationForAmazon($url)
@@ -90,5 +129,12 @@ class EcomAffiliation
         $tmp = explode('?', $url);
         
         return $tmp[0].'?'.http_build_query($actualQueryStringParameters, null, '&');
+    }
+    
+    protected function getSourceUrlFrom($url, $paramName)
+    {
+        $params = array();
+        parse_str($url, $params);
+        return array_key_exists($paramName, $params) ? $params[$paramName] : null;
     }
 }
