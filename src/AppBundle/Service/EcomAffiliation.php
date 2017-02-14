@@ -54,12 +54,15 @@ class EcomAffiliation
             case 'www.but.fr':
             case 'www.but.com':
                 return $this->getAffiliationForBut($url);
-            
+
             case 'www.conforama.fr':
             case 'www.conforama.com':
                 return $this->getAffiliationForConforama($url);
 
-            
+            case 'www.priceminister.fr':
+                return $this->getAffiliationForPriceminister($url);
+
+
             case 'www.electrodepot.fr':
             case 'www.electrodepot.com':
                 return $this->getAffiliationForElectroDepot($url);
@@ -72,6 +75,28 @@ class EcomAffiliation
             case 'track.effiliation.com':
                 $sourceUrl = $this->getSourceUrlFrom($url, "url");
                 return $this->getNewUrl($sourceUrl);
+        }
+        return $url;
+    }
+    
+    public function getOriginalUrl($url)
+    {
+        if(empty($url))
+        {
+            return $url;
+        }
+        $hostname = parse_url($url, PHP_URL_HOST);
+        $hostname = strtolower($hostname);
+        switch($hostname)
+        {
+
+            //SPECIAL
+            case 'www.awin1.com':
+                $sourceUrl = $this->getSourceUrlFrom($url, "p");
+                return $sourceUrl;
+            case 'track.effiliation.com':
+                $sourceUrl = $this->getSourceUrlFrom($url, "url");
+                return $sourceUrl;
         }
         return $url;
     }
@@ -101,14 +126,17 @@ class EcomAffiliation
     {
         return $this->getAffiliateWindowsLink($url);
     }
+    protected function getAffiliationForPriceminister($url)
+    {
+        return $this->getEffiliationLink($url, 18233737);
+    }
 
     protected function getAffiliationForElectroDepot($url)
     {
         return $this->getEffiliationLink($url);
     }
-
-
-    protected function getEffiliationLink($url)
+    
+    protected function getEffiliationLink($url, $id=16300285)
     {
         return "http://track.effiliation.com/servlet/effi.redir?id_compteur=16300285&url=".urlencode($url);
     }

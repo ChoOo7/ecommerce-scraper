@@ -129,9 +129,13 @@ class EcomPrice
                     break;
 
                 case 'track.effiliation.com':
-                    $price = $this->getPriceFromEffiliation($url);
-                    break;
+                    $sourceUrl = $this->getSourceUrlFrom($url, "url");
+                    return $this->getPrice($sourceUrl, $tryLeft);
 
+                case 'www.awin1.com':
+                    $sourceUrl = $this->getSourceUrlFrom($url, "p");
+                    return $this->getPrice($sourceUrl, $tryLeft);
+                
                 case 'www.vieffetrade.eu':
                     $price = $this->getPriceFromVieffetrade($url);
                     break;
@@ -163,6 +167,14 @@ class EcomPrice
             return $this->getPrice($url, $tryLeft);
         }
         return $price;
+    }
+
+
+    protected function getSourceUrlFrom($url, $paramName)
+    {
+        $params = array();
+        parse_str($url, $params);
+        return array_key_exists($paramName, $params) ? $params[$paramName] : null;
     }
 
     protected function getPriceFromBoulanger($url)
