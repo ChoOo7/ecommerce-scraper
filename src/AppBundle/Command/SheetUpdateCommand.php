@@ -54,6 +54,11 @@ class SheetUpdateCommand extends ContainerAwareCommand
         {
             $this->output->writeln("starting sheet ".$sheet['title']."");
             
+            if(stripos($sheet['title'], 'pivot') !== false)
+            {
+                $this->output->writeln("sheet pivot ignored");
+            }
+            
             $letters = 'abcdefghijklmnopqrstuvwxyz';
             $columnForPrice = null;
             $columnForUrl = null;
@@ -276,8 +281,10 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 }else{
                                     $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' price from ' . $actualPrice . ' to ' . $newPrice . ' on url <a href="' . $readedInfos['uri'][$localIndex] . '">' . $hostname . '</a>';
-                                    
-                                    $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$newPrice));
+
+                                    $columnPrice = $columnIndexes['price'];
+                                    $columnDate = $columnIndexes['lastUpdateDate'];
+                                    $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($columnPrice.$globalLineNumber=>$newPrice, $columnDate.$globalLineNumber=>date('d/m/Y H:i:s')));
                                     $errorMessage .= '<br /><a href="'.$updateUrl.'">confirm and set new price</a>';
                                     
                                     $this->errors[] = $errorMessage;
