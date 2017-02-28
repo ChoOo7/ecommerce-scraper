@@ -62,6 +62,10 @@ class EcomAffiliation
             case 'www.priceminister.fr':
                 return $this->getAffiliationForPriceminister($url);
 
+            case 'www.webdistrib.fr':
+            case 'www.webdistrib.com':
+                return $this->getAffiliationForWebDistrib($url);
+
 
             case 'www.electrodepot.fr':
             case 'www.electrodepot.com':
@@ -129,6 +133,10 @@ class EcomAffiliation
     protected function getAffiliationForPriceminister($url)
     {
         return $this->getEffiliationLink($url, 18233737);
+    }
+    protected function getAffiliationForWebDistrib($url)
+    {
+        return $this->getEffiliationLink($url, 18794117);
     }
 
     protected function getAffiliationForElectroDepot($url)
