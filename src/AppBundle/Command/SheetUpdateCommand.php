@@ -57,6 +57,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
             if(stripos($sheet['title'], 'pivot') !== false)
             {
                 $this->output->writeln("sheet pivot ignored");
+                continue;
             }
             
             $letters = 'abcdefghijklmnopqrstuvwxyz';
