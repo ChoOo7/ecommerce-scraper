@@ -141,7 +141,7 @@ class EcomAffiliation
 
     protected function getAffiliationForElectroDepot($url)
     {
-        return $this->getEffiliationLink($url);
+        return $this->getEffiliationLink($url, 1808096);
     }
     
     protected function getEffiliationLink($url, $id=16300285)
