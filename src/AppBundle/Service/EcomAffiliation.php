@@ -107,7 +107,7 @@ class EcomAffiliation
 
     protected function getAffiliationForBoulanger($url)
     {
-        return $this->getEffiliationLink($url);
+        return $this->getEffiliationLink($url, 16300285);
     }
 
 
@@ -146,7 +146,7 @@ class EcomAffiliation
     
     protected function getEffiliationLink($url, $id=16300285)
     {
-        return "http://track.effiliation.com/servlet/effi.redir?id_compteur=16300285&url=".urlencode($url);
+        return "http://track.effiliation.com/servlet/effi.redir?id_compteur=".$id."&url=".urlencode($url);
     }
 
     protected function getAffiliateWindowsLink($url)
