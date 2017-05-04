@@ -39,11 +39,12 @@ class EcomPrice
                     $price = $this->getPriceFromBoulanger($url);
                     break;
 
+                /*
                 case 'www.darty.fr':
                 case 'www.darty.com':
                     $price = $this->getPriceFromDarty($url);
                     break;
-
+*/
                 case 'www.amazon.fr':
                     $price = $this->getPriceFromAmazon($url);
                     break;
@@ -51,27 +52,28 @@ class EcomPrice
                 case 'www.rueducommerce.fr':
                     $price = $this->getPriceFromRueDuCommerce($url);
                     break;
-
+/*
                 case 'www.cdiscount.com':
                     $price = $this->getPriceFromCDiscount($url);
                     break;
-
+*/
+                /*
                 case 'www.arredatutto.com':
                     $price = $this->getPriceFromArredatutto($url);
                     break;
-
+*/
                 case 'www.priceminister.com':
                     $price = $this->getPriceFromPriceMinister($url);
                     break;
-
+/*
                 case 'www.mistergooddeal.com':
                     $price = $this->getPriceFromMisterGoodDeal($url);
                     break;
-
+*/
                 case 'www.electrodepot.fr':
                     $price = $this->getPriceFromElectroDepot($url);
                     break;
-
+/*
                 case 'www.abribatelectromenager.fr':
                     $price = $this->getPriceFromAbribatElectromenager($url);
                     break;
@@ -83,11 +85,11 @@ class EcomPrice
                 case 'www.backmarket.fr':
                     $price = $this->getPriceFromBackMarket($url);
                     break;
-
+*/
                 case 'www.webdistrib.com':
                     $price = $this->getPriceFromWebDistrib($url);
                     break;
-
+/*
                 case 'www.maginea.com':
                     $price = $this->getPriceFromMaginea($url);
                     break;
@@ -127,11 +129,11 @@ class EcomPrice
                 case 'www.ubaldi.com':
                     $price = $this->getPriceFromUbaldi($url);
                     break;
-
+*/
                 case 'track.effiliation.com':
                     $sourceUrl = $this->getSourceUrlFrom($url, "url");
                     return $this->getPrice($sourceUrl, $tryLeft);
-
+/*
                 case 'www.awin1.com':
                     $sourceUrl = $this->getSourceUrlFrom($url, "p");
                     return $this->getPrice($sourceUrl, $tryLeft);
@@ -151,6 +153,7 @@ class EcomPrice
                 case 'www.pixmania.fr':
                     //On sait pas faire
                     return null;
+*/
 
             }
         }
