@@ -59,6 +59,27 @@ class DefaultController extends Controller
     }
 
     /**
+     * @Route("/updatelink", name="updatelink")
+     */
+    public function updatelinkAction(Request $request)
+    {
+        // replace this example code with whatever you need
+        $root = $this->get('kernel')->getRootDir();
+        $docId = $request->get('doc');
+        $command = null;
+        if($docId)
+        {
+            $command = 'php bin/console ecomscraper:sheet:updatelink --doc '.escapeshellarg($docId);
+        }else{
+            $command = 'bash '.escapeshellarg($root.'/../bin/flo.sh');
+        }
+        $command = 'cd '.escapeshellarg($root.'/..').' && timeout 3600 '.$command.' 1>> /tmp/test 2>&1 &';
+        var_dump($command);
+        shell_exec($command);
+        return $this->redirect($this->generateUrl("homepage"));
+    }
+
+    /**
      * @Route("/checkinfo", name="checkinfo")
      */
     public function checkInfoAction(Request $request)

@@ -70,8 +70,13 @@ class EcomAffiliation
             case 'www.electrodepot.fr':
             case 'www.electrodepot.com':
                 return $this->getAffiliationForElectroDepot($url);
-            
-            
+
+
+            case 'www.priceminister.com':
+            case 'www.priceminister.fr':
+                return $this->getAffiliationForPriceminister($url);
+
+
             //SPECIAL
             case 'www.awin1.com':
                 $sourceUrl = $this->getSourceUrlFrom($url, "p");
@@ -101,13 +106,16 @@ class EcomAffiliation
             case 'track.effiliation.com':
                 $sourceUrl = $this->getSourceUrlFrom($url, "url");
                 return $sourceUrl;
+            case 'clk.tradedoubler.com':
+                $sourceUrl = $this->getSourceUrlFrom($url, "url");
+                return $sourceUrl;
         }
         return $url;
     }
 
     protected function getAffiliationForBoulanger($url)
     {
-        return $this->getEffiliationLink($url, 16300285);
+        return $this->getEffiliationLink($url, 16300285, 'xtor=AL-6875-[**typeaffilie**]-[1395069625]-[deeplink]');
     }
 
 
@@ -130,23 +138,45 @@ class EcomAffiliation
     {
         return $this->getAffiliateWindowsLink($url);
     }
+
     protected function getAffiliationForPriceminister($url)
     {
         return $this->getEffiliationLink($url, 18233737);
     }
+    
+    protected function getAffiliationForMisterGoodDeal($url)
+    {
+        return $this->getTradeDoublerLink($url, '?p=105837&a=2950396&g=21768610');
+    }
+
     protected function getAffiliationForWebDistrib($url)
     {
-        return $this->getEffiliationLink($url, 18794117);
+        return $this->getEffiliationLink($url, 18794117, 'utm_source=Effiliation&utm_medium=1395069625&site=Effiliation&utm_medium=deeplink&utm_campaign=EffiliationWebd');
     }
 
     protected function getAffiliationForElectroDepot($url)
     {
-        return $this->getEffiliationLink($url, 1808096);
+        return $this->getEffiliationLink($url, 18080963);
+    }
+
+    protected function getEffiliationLink($url, $id=16300285, $suffix = null)
+    {
+        if($suffix)
+        {
+            $url = trim($url, '?&');
+            $url .= (strpos($url, '?') !== false ? '&' : '?').$suffix;
+        }
+        return "http://track.effiliation.com/servlet/effi.redir?id_compteur=".$id."&url=".urlencode($url);
     }
     
-    protected function getEffiliationLink($url, $id=16300285)
+    protected function getTradeDoublerLink($url, $id, $suffix = null)
     {
-        return "http://track.effiliation.com/servlet/effi.redir?id_compteur=".$id."&url=".urlencode($url);
+        if($suffix)
+        {
+            $url = trim($url, '?&');
+            $url .= (strpos($url, '?') !== false ? '&' : '?').$suffix;
+        }
+        return "http://clk.tradedoubler.com/click".$id."&url=".urlencode($url);
     }
 
     protected function getAffiliateWindowsLink($url)
@@ -171,6 +201,15 @@ class EcomAffiliation
     {
         $params = array();
         parse_str($url, $params);
-        return array_key_exists($paramName, $params) ? $params[$paramName] : null;
+        $url = array_key_exists($paramName, $params) ? $params[$paramName] : null;
+        if(empty($url))
+        {
+            return $url;
+        }
+
+        $url = str_replace('xtor=AL-6875-[**typeaffilie**]-[1395069625]-[deeplink]', '', $url);
+        $url = str_replace('utm_source=Effiliation&utm_medium=1395069625&site=Effiliation&utm_medium=deeplink&utm_campaign=EffiliationWebd', '', $url);
+        
+        return $url;
     }
 }

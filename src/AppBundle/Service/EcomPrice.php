@@ -65,11 +65,11 @@ class EcomPrice
                 case 'www.priceminister.com':
                     $price = $this->getPriceFromPriceMinister($url);
                     break;
-/*
+
                 case 'www.mistergooddeal.com':
                     $price = $this->getPriceFromMisterGoodDeal($url);
                     break;
-*/
+
                 case 'www.electrodepot.fr':
                     $price = $this->getPriceFromElectroDepot($url);
                     break;
@@ -133,6 +133,12 @@ class EcomPrice
                 case 'track.effiliation.com':
                     $sourceUrl = $this->getSourceUrlFrom($url, "url");
                     return $this->getPrice($sourceUrl, $tryLeft);
+
+                case 'clk.tradedoubler.com':
+                    $sourceUrl = $this->getSourceUrlFrom($url, "url");
+                    return $this->getPrice($sourceUrl, $tryLeft);
+
+                    
 /*
                 case 'www.awin1.com':
                     $sourceUrl = $this->getSourceUrlFrom($url, "p");
