@@ -356,6 +356,22 @@ class EcomPrice
 
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
+
+
+
+        $expirated = false;
+        $crawler->filter('#right-column img')->each(function ($node) use (& $expirated){
+            $alt = ($node->attr('alt'));
+            if(strtolower($alt) == 'épuisé')
+            {
+                $expirated = true;
+            }
+        });
+        if($expirated)
+        {
+            throw new Expirated();
+        }
+        
         $crawler->filter('meta[itemprop="price"]')->each(function ($node) use (& $price){
             $price = ($node->attr('content'));
         });
