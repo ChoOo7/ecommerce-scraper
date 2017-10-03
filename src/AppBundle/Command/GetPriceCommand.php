@@ -11,6 +11,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Exception\Expirated;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,9 +33,16 @@ class GetPriceCommand extends ContainerAwareCommand
         $ecomPriceSer = $this->getContainer()->get('ecom.price');
 
         $url = $this->input->getOption('url');
-        $price = $ecomPriceSer->getPrice($url);
-        
-        $this->output->writeln($price);
+        try
+        {
+            $price = $ecomPriceSer->getPrice($url);
+
+            $this->output->writeln($price);
+        }
+        catch(Expirated $e)
+        {
+            $this->output->writeln("Produit non disponible");
+        }
     }
 
     /**

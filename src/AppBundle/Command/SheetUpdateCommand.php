@@ -11,6 +11,7 @@
 
 namespace AppBundle\Command;
 
+use AppBundle\Exception\Expirated;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
@@ -259,10 +260,20 @@ class SheetUpdateCommand extends ContainerAwareCommand
                         }
                     }
 
+                    $expirated = false;
                     $actualPrice = $oldPrice = array_key_exists('price', $readedInfos) ? (array_key_exists($localIndex, $readedInfos['price']) ? $readedInfos['price'][$localIndex] : null) : null;
                     if(array_key_exists('uri', $readedInfos) && array_key_exists($localIndex, $readedInfos['uri']) && $readedInfos['uri'][$localIndex])
-                    {
-                        $newPrice = $ecomPriceSer->getPrice($readedInfos['uri'][$localIndex]);
+                    {                        
+                        $newPrice = null;
+                        try
+                        {
+                            $newPrice = $ecomPriceSer->getPrice($readedInfos['uri'][$localIndex]);
+                        }
+                        catch(Expirated $e)
+                        {
+                            $expirated = true;
+                            $actualPrice = null;
+                        }
                         if($newPrice != $actualPrice || $actualPrice === null)
                         {
                             if($newPrice)
@@ -292,11 +303,16 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $this->output->writeln($errorMessage);
                                 }
                             }else{
-                                if($doRemovePrice)
+                                if($doRemovePrice || $expirated)
                                 {
                                     $_uri = $readedInfos['uri'][$localIndex];
                                     $hostname = parse_url($_uri, PHP_URL_HOST);
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$_uri.'">'.$hostname.'</a>, we remove link and price. (google sheet price : '.((string)$actualPrice).')';
+                                    $errorMessage = "";
+                                    if($expirated)
+                                    {
+                                        $errorMessage .= 'EXPIRATED : ';
+                                    }
+                                    $errorMessage .= 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$_uri.'">'.$hostname.'</a>, we remove link and price. (google sheet price : '.((string)$actualPrice).')';
                                     $errorMessage .= ' <br /> '.$linksInfos;
 
                                     $this->errors[] = $errorMessage;
@@ -313,7 +329,12 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $ecomSheet->setSheetValue($docId, $column.$globalLineNumber, date('Y-m-d H:i:s'), $sheet['title']);                                    
                                 }else{
                                     $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a> (google sheet price : '.((string)$actualPrice).')';
+                                    $errorMessage = "";
+                                    if($expirated)
+                                    {
+                                        $errorMessage .= 'EXPIRATED : ';
+                                    }
+                                    $errorMessage .= 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a> (google sheet price : '.((string)$actualPrice).')';
                                     $errorMessage .= ' <br /> '.$linksInfos;
 
                                     $columnPrice = $columnIndexes['price'];
@@ -335,14 +356,14 @@ class SheetUpdateCommand extends ContainerAwareCommand
 
                     $errorMessage = null;
                     //On va ensuite recherche un meilleur prix
-                    if(array_key_exists('price', $detectedInfos))
+                    if(array_key_exists('price', $detectedInfos) && ! (array_key_exists('expirated', $detectedInfos) && $detectedInfos['expirated']))
                     {
                         foreach ($detectedInfos['price'] as $provider => $proposedPrice)
                         {
-                            if ($proposedPrice > 0 && ($proposedPrice < $actualPrice || $actualPrice === null))
+                            if ($proposedPrice > 0 && ($proposedPrice < $actualPrice || $actualPrice === null || $expirated))
                             {
                                 $newPrice = $proposedPrice;
-                                $variationIsOk = $actualPrice == 0 || (abs(($newPrice - $actualPrice) / $actualPrice) < 0.3);
+                                $variationIsOk = $expirated || $actualPrice == 0 || (abs(($newPrice - $actualPrice) / $actualPrice) < 0.3);
 
                                 $newUrl = $detectedInfos['uri'][$provider];
                                 $newUrl = $ecomAffiSer->getNewUrl($newUrl);

@@ -11,6 +11,7 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Exception\Expirated;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
@@ -81,6 +82,12 @@ class EcomInfo
                 $infosBis = $this->$methodName($ean, $productType, $infos);
                 if ($infosBis !== null && is_array($infosBis))
                 {
+                    /*
+                    if(array_key_exists('expirated', $infosBis) && $infosBis['expirated'])
+                    {
+                        continue;
+                    }
+                    */
                     foreach ($infosBis as $k => $v)
                     {
                         if ( ! array_key_exists($k, $infos))
@@ -94,7 +101,6 @@ class EcomInfo
             catch(\Exception $e)
             {
                 echo "\nError getting info : ".$e->getMessage();
-                var_dump($e->getTraceAsString());
             }
         }
         if(array_key_exists('uri', $infos))
@@ -250,10 +256,17 @@ class EcomInfo
         if($searchUrl != $crawler->getUri() && $searchUrl2 != $crawler->getUri())
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($infos['uri']);
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -336,10 +349,17 @@ class EcomInfo
         if($newUrl)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($infos['uri']);
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -486,10 +506,17 @@ class EcomInfo
         if($crawler->getUri() != $url)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($infos['uri']);
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -567,10 +594,17 @@ class EcomInfo
         if($crawler->getUri() != $url)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($infos['uri']);
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -605,10 +639,17 @@ class EcomInfo
         if($crawler->getUri() != $url)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($infos['uri']);
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -678,10 +719,17 @@ class EcomInfo
         if($crawler->getUri() != $url)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($infos['uri']);
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -749,10 +797,17 @@ class EcomInfo
         if($crawler->getUri() != $url)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($infos['uri']);
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -826,13 +881,19 @@ class EcomInfo
             }
         });
 
-
-        $price = $this->ecomPriceService->getPrice($crawler->getUri());
-        if ($price)
+        try
         {
-            $infos['uri'] = $crawler->getUri();
-            $infos['price'] = $price;
+            $price = $this->ecomPriceService->getPrice($crawler->getUri());
+            if ($price)
+            {
+                $infos['uri'] = $crawler->getUri();
+                $infos['price'] = $price;
 
+            }
+        }
+        catch(Expirated $e)
+        {
+            $infos['expirated'] = "true";
         }
 
         return $infos;
@@ -914,10 +975,17 @@ class EcomInfo
         if($crawler->getUri() != $url)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($infos['uri']);
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($infos['uri']);
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -979,10 +1047,17 @@ class EcomInfo
         if($crawler->getUri() != $url)
         {
             $infos['uri'] = $crawler->getUri();
-            $price = $this->ecomPriceService->getPrice($crawler->getUri());
-            if ($price)
+            try
             {
-                $infos['price'] = $price;
+                $price = $this->ecomPriceService->getPrice($crawler->getUri());
+                if ($price)
+                {
+                    $infos['price'] = $price;
+                }
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
             }
         }
 
@@ -990,7 +1065,7 @@ class EcomInfo
     }
 
 
-    protected function getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft = 5)
+    protected function getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft = 3, $useTor = false)
     {
         $infos = array();
         $infos['ean'] = $ean;
@@ -1003,14 +1078,23 @@ class EcomInfo
         $url = 'https://www.amazon.fr/s/ref=nb_sb_noss?__mk_fr_FR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&url=search-alias%3Daps&field-keywords='.urlencode($ean);
 
         $client = new \Goutte\Client();
-        $client->setClient($torGuzzleClient);
+        if($useTor)
+        {
+            $client->setClient($torGuzzleClient);
+        }
         $client->setHeader('User-Agent', "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36");
         $crawler = $client->request('GET', $url);
         
         if(stripos($crawler->text(), 'tes pas un robot.') !== false)
         {
-            //TODO
-            throw new \Exception("AmazonRobotException");
+            if( ! $useTor)
+            {
+                $useTor = true;
+                return $this->getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft, $useTor);
+            }else
+            {
+                throw new \Exception("AmazonRobotException");
+            }
         }
         
         $newUrl = null;
@@ -1028,7 +1112,7 @@ class EcomInfo
             sleep(6-$tryLeft);
             $tryLeft--;
             echo "\nretrying getInfosOfFromAmazon";
-            return $this->getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft);
+            return $this->getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft, $useTor);
         }
         if($newUrl == null)
         {
@@ -1099,7 +1183,14 @@ class EcomInfo
         });
 
         $infos['uri'] = $crawler->getUri();
-        $infos['price'] = $this->ecomPriceService->getPrice($infos['uri']);
+        try
+        {
+            $infos['price'] = $this->ecomPriceService->getPrice($infos['uri']);
+        }
+        catch(Expirated $e)
+        {
+            $infos['expirated'] = "true";
+        }
 
         return $infos;
     }
@@ -1177,10 +1268,17 @@ class EcomInfo
         });
 
         $infos['uri'] = $crawler->getUri();
-        $price = $this->ecomPriceService->getPrice($infos['uri']);
-        if($price)
+        try
         {
-            $infos['price'] = $price;
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+        catch(Expirated $e)
+        {
+            $infos['expirated'] = "true";
         }
         
         return $infos;
@@ -1291,10 +1389,17 @@ class EcomInfo
 
 
         $infos['uri'] = $crawler->getUri();
-        $price = $this->ecomPriceService->getPrice($infos['uri']);
-        if($price)
+        try
         {
-            $infos['price'] = $price;
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+        catch(Expirated $e)
+        {
+            $infos['expirated'] = "true";
         }
 
         return $infos;
@@ -1387,11 +1492,17 @@ class EcomInfo
         }
 
 
-        
-        $price = $this->ecomPriceService->getPrice($infos['uri']);
-        if($price)
+        try
         {
-            $infos['price'] = $price;
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+        catch(Expirated $e)
+        {
+            $infos['expirated'] = "true";
         }
 
         return $infos;
@@ -1496,10 +1607,17 @@ class EcomInfo
         });
 
         $infos['uri'] = $crawler->getUri();
-        $price = $this->ecomPriceService->getPrice($infos['uri']);
-        if($price)
+        try
         {
-            $infos['price'] = $price;
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+        catch(Expirated $e)
+        {
+            $infos['expirated'] = "true";
         }
 
         return $infos;
@@ -1538,10 +1656,17 @@ class EcomInfo
         });
 
         $infos['uri'] = $crawler->getUri();
-        $price = $this->ecomPriceService->getPrice($infos['uri']);
-        if($price)
+        try
         {
-            $infos['price'] = $price;
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+        catch(Expirated $e)
+        {
+            $infos['expirated'] = "true";
         }
 
         return $infos;
@@ -1606,10 +1731,17 @@ class EcomInfo
         });
 
         $infos['uri'] = $crawler->getUri();
-        $price = $this->ecomPriceService->getPrice($infos['uri']);
-        if($price)
+        try
         {
-            $infos['price'] = $price;
+            $price = $this->ecomPriceService->getPrice($infos['uri']);
+            if ($price)
+            {
+                $infos['price'] = $price;
+            }
+        }
+        catch(Expirated $e)
+        {
+            $infos['expirated'] = "true";
         }
 
         return $infos;
@@ -1685,7 +1817,14 @@ class EcomInfo
         if( ! empty($infos))
         {
             $infos['uri'] = $crawler->getUri();
-            $infos['price'] = $this->ecomPriceService->getPrice($infos['uri']);
+            try
+            {
+                $infos['price'] = $this->ecomPriceService->getPrice($infos['uri']);
+            }
+            catch(Expirated $e)
+            {
+                $infos['expirated'] = "true";
+            }
         }
 
 
