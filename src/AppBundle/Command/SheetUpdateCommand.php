@@ -610,6 +610,12 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $docId = $this->input->getOption('doc');
         $documentLink = 'https://docs.google.com/spreadsheets/d/'.$docId.'/edit';
 
+        $mailFileName = date('Y-m-m-H:i:s').'-'.uniqid('a').'.html';
+        $isRasp = ! file_exists('/1to/');
+        $hostname = $isRasp ? 'ecom-scrapper.home.chooo7.com' : 'ecom.local';
+        $onlineEmailLink = 'http://'.$hostname.'/mails/'.$mailFileName;
+        
+
         $subject = "Import result ";
         if($category)
         {
@@ -618,6 +624,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $body = "<h1>Actions : </h1>";
         $body .= "\n".'<div>';
         $body .= "\n".'<p>Document : <a href="'.$documentLink.'">'.$documentLink.'</a></p>';
+        $body .= "\n".'<p>View this email online : <a href="'.$onlineEmailLink.'">'.$onlineEmailLink.'</a></p>';
         $body .= "\n".'</div>';
         $body .= "\n".'<div>';
         $body .= "\n".'<ul>';
@@ -627,6 +634,14 @@ class SheetUpdateCommand extends ContainerAwareCommand
         }
         $body .= "\n".'</ul>';
         $body .= "\n".'</div>';
+
+
+        $mailHtmlContent = '<html><head></head><body>'.$body.'</body></html>';
+
+        $root = $this->getContainer()->get('kernel')->getRootDir().'/../';
+        //$root = $this->kernel->getRootDir();
+        $dir = $root.'/web/mail/';
+        file_put_contents($dir.$mailFileName, $mailHtmlContent);
         
         $email = new \SendGrid\Email();
         foreach($tos as $to)
