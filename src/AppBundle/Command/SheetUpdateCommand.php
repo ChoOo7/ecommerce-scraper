@@ -590,7 +590,13 @@ class SheetUpdateCommand extends ContainerAwareCommand
     {
         if(empty($this->errors))
         {
-            return;
+            $this->errors[] = "Aucune erreur détéctée, va skier !!!!!";
+            $this->errors[] = "Aucune erreur détéctée, va skier !!!!!";
+            $this->errors[] = "Aucune erreur détéctée, va skier !!!!!";
+            $this->errors[] = "Aucune erreur détéctée, va skier !!!!!";
+            $this->errors[] = "Aucune erreur détéctée, va skier !!!!!";
+            $this->errors[] = "Aucune erreur détéctée, va skier !!!!!";
+            $this->errors[] = "Aucune erreur détéctée, va skier !!!!!";
         }
         $apiKey = $this->getContainer()->getParameter('sendgrid_api_key');
         $from = $this->getContainer()->getParameter('alert_mail_from');
@@ -613,7 +619,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $mailFileName = date('Y-m-m-H:i:s').'-'.uniqid('a').'.html';
         $isRasp = ! file_exists('/1to/');
         $hostname = $isRasp ? 'ecom-scrapper.home.chooo7.com' : 'ecom.local';
-        $onlineEmailLink = 'http://'.$hostname.'/mails/'.$mailFileName;
+        $onlineEmailLink = 'http://'.$hostname.'/mail/'.$mailFileName;
         
 
         $subject = "Import result ";
