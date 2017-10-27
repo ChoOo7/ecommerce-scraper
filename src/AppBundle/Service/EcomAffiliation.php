@@ -70,7 +70,18 @@ class EcomAffiliation
             case 'www.webdistrib.com':
                 return $this->getAffiliationForWebDistrib($url);
 
+            case 'www.cdiscount.fr':
+            case 'www.cdiscount.com':
+                return $this->getAffiliationForCDiscount($url);
 
+
+            case 'www.villatech.fr':
+            case 'www.villatech.com':
+                return $this->getAffiliationForVillatech($url);
+
+            case 'www.magasins-privilege.fr':
+                return $this->getAffiliationForMagazinPrivilege($url);
+            
             case 'www.electrodepot.fr':
             case 'www.electrodepot.com':
                 return $this->getAffiliationForElectroDepot($url);
@@ -88,6 +99,12 @@ class EcomAffiliation
             case 'track.effiliation.com':
                 $sourceUrl = $this->getSourceUrlFrom($url, "url");
                 return $this->getNewUrl($sourceUrl);
+
+            case 'action.metaffiliation.com':
+                $sourceUrl = $this->getSourceUrlFrom($url, "redir");
+                return $this->getNewUrl($sourceUrl);
+
+
         }
         return $url;
     }
@@ -158,9 +175,25 @@ class EcomAffiliation
         return $this->getEffiliationLink($url, 18794117, 'utm_source=Effiliation&utm_medium=1395069625&site=Effiliation&utm_medium=deeplink&utm_campaign=EffiliationWebd');
     }
 
+    protected function getAffiliationForCDiscount($url)
+    {
+        return $this->getAffiliateWindowsLink($url, 6948);
+    }
+
     protected function getAffiliationForElectroDepot($url)
     {
         return $this->getEffiliationLink($url, 18080963);
+    }
+
+
+    protected function getAffiliationForVillatech($url)
+    {
+        return $this->getMetaffiliationLink($url, "P41E6F56C63D151");
+    }
+
+    protected function getAffiliationForMagazinPrivilege($url)
+    {
+        return $this->getMetaffiliationLink($url, "P43DFF56C63D131");
     }
 
     protected function getEffiliationLink($url, $id=16300285, $suffix = null)
@@ -183,9 +216,15 @@ class EcomAffiliation
         return "http://clk.tradedoubler.com/click".$id."&url=".urlencode($url);
     }
 
-    protected function getAffiliateWindowsLink($url)
+
+    protected function getAffiliateWindowsLink($url, $id = 6901)
     {
-        return "http://www.awin1.com/cread.php?awinmid=6901&awinaffid=311895&clickref=&p=".urlencode($url);
+        return "http://www.awin1.com/cread.php?awinmid=".$id."&awinaffid=311895&clickref=&p=".urlencode($url);
+    }
+
+    protected function getMetaffiliationLink($url, $id = "P41E6F56C63D151")
+    {
+        return "http://action.metaffiliation.com/trk.php?mclic=".$id."&redir=".urlencode($url);
     }
 
     protected function getAffiliationForAmazon($url)

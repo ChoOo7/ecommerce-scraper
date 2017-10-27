@@ -58,7 +58,7 @@ class EcomPrice
                     $price = $this->getPriceFromCDiscount($url);
                     break;
                 case 'www.arredatutto.com':
-                    $price = $this->getPriceFromArredatutto($url);
+                    //$price = $this->getPriceFromArredatutto($url);
                     break;
 
                 case 'www.priceminister.com':
@@ -74,7 +74,7 @@ class EcomPrice
                     break;
 
                 case 'www.abribatelectromenager.fr':
-                    $price = $this->getPriceFromAbribatElectromenager($url);
+                    //$price = $this->getPriceFromAbribatElectromenager($url);
                     break;
 
                 case 'www.conforama.fr':
@@ -82,7 +82,7 @@ class EcomPrice
                     break;
 
                 case 'www.backmarket.fr':
-                    $price = $this->getPriceFromBackMarket($url);
+                    //$price = $this->getPriceFromBackMarket($url);
                     break;
 
                 case 'www.webdistrib.com':
@@ -90,27 +90,27 @@ class EcomPrice
                     break;
 
                 case 'www.maginea.com':
-                    $price = $this->getPriceFromMaginea($url);
+                    //$price = $this->getPriceFromMaginea($url);
                     break;
 
                 case 'www.etrouvetout.com':
-                    $price = $this->getPriceFromETrouveTout($url);
+                    //$price = $this->getPriceFromETrouveTout($url);
                     break;
 
                 case 'www.allopneus.com':
-                    $price = $this->getPriceFromAlloPneus($url);
+                    //$price = $this->getPriceFromAlloPneus($url);
                     break;
 
                 case 'www.touspourunprix.fr':
-                    $price = $this->getPriceFromTousPourUnPrix($url);
+                    //$price = $this->getPriceFromTousPourUnPrix($url);
                     break;
 
                 case 'www.tyrigo.com':
-                    $price = $this->getPriceFromTyrigo($url);
+                    //$price = $this->getPriceFromTyrigo($url);
                     break;
 
                 case 'www.lacooplr.fr':
-                    $price = $this->getPriceFromLaCoopLr($url);
+                    //$price = $this->getPriceFromLaCoopLr($url);
                     break;
 
                 case 'www.magasins-privilege.fr':
@@ -118,7 +118,7 @@ class EcomPrice
                     break;
 
                 case 'www.idealprice.fr':
-                    $price = $this->getPriceFromIdealPrice($url);
+                    //$price = $this->getPriceFromIdealPrice($url);
                     break;
 
                 case 'www.villatech.fr':
@@ -126,7 +126,7 @@ class EcomPrice
                     break;
 
                 case 'www.ubaldi.com':
-                    $price = $this->getPriceFromUbaldi($url);
+                    //$price = $this->getPriceFromUbaldi($url);
                     break;
 
                 case 'track.effiliation.com':
@@ -137,21 +137,25 @@ class EcomPrice
                     $sourceUrl = $this->getSourceUrlFrom($url, "url");
                     return $this->getPrice($sourceUrl, $tryLeft);
 
+                case 'action.metaffiliation.com':
+                    $sourceUrl = $this->getSourceUrlFrom($url, "redir");
+                    return $this->getPrice($sourceUrl, $tryLeft);
+
                     
                 case 'www.awin1.com':
                     $sourceUrl = $this->getSourceUrlFrom($url, "p");
                     return $this->getPrice($sourceUrl, $tryLeft);
                 
                 case 'www.vieffetrade.eu':
-                    $price = $this->getPriceFromVieffetrade($url);
+                    //$price = $this->getPriceFromVieffetrade($url);
                     break;
 
                 case 'www.klarstein.fr':
-                    $price = $this->getPriceFromKlarstein($url);
+                    //$price = $this->getPriceFromKlarstein($url);
                     break;
 
                 case 'www.centralepneus.fr':
-                    return $this->getPriceFromCentralePneus($url);
+                    //return $this->getPriceFromCentralePneus($url);
 
 
                 case 'www.pixmania.fr':
@@ -514,8 +518,20 @@ class EcomPrice
         {
             throw new Expirated();
         }
-        
-        
+
+        $expirated = $crawler->filter('#product__main .availability__status--resupply')->count();
+        if($expirated)
+        {
+            throw new Expirated();
+        }
+
+        $expirated = $crawler->filter('#product__main .availability__status--soldout')->count();
+        if($expirated)
+        {
+            throw new Expirated();
+        }
+
+
         $crawler->filter('#newProductPrice')->each(function ($node) use (& $price){
             $price = ($node->text());
         });
