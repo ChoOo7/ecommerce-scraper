@@ -26,9 +26,9 @@ class EcomInfo
      * @var EcomPrice
      */
     protected $ecomPriceService;
-    
+
     protected $ecomAffiSer;
-    
+
     /**
      * EcomInfo constructor.
      * @param EcomPrice $ecomPrice
@@ -61,15 +61,15 @@ class EcomInfo
             case 'pneus':
             case 'pneu':
                 return $this->getInfosOf($ean, 'pneu');
-            
+
             default:
                 return $this->getInfosOf($ean, $productType);
-                
+
         }
         return null;
     }
-    
-    
+
+
     protected function getInfosOf($ean, $productType)
     {
         $infos = array();
@@ -112,7 +112,7 @@ class EcomInfo
         }
         return $infos;
     }
-    
+
     protected function getProvidersOfType($productType)
     {
         //return array('Darty');
@@ -164,10 +164,10 @@ class EcomInfo
             if($infos['image_url']{0} == '/')
             {
                 $tmp = parse_url($crawler->getUri());
-                $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url']; 
+                $infos['image_url'] = $tmp['scheme'].'://'.$tmp['host'].$infos['image_url'];
             }
         });
-        
+
 
         $crawler->filter('#darty_product_brand')->each(function ($node) use (& $infos)
         {
@@ -240,12 +240,12 @@ class EcomInfo
                 }
             }
         });
-        
+
         $crawler->filter('#header-breadcrumb-zone')->eq(0)->each(function ($node) use (& $infos, $productType){
             $breadcrumbText = $node->text();
             $infos = $this->getInfosFromBreadcrumb($infos, $breadcrumbText, $productType);
         });
-        
+
         $crawler->filter('.product_bloc_caracteristics tr')->each(function ($node) use (& $infos){
             $textNode = $node->text();
             $textLabel = trim($node->filter('th')->text());
@@ -384,12 +384,12 @@ class EcomInfo
         });
         return $infos;
     }
-    
+
     protected function getInfosOfFromEanSearch($ean, $productType, $parametersInfos)
     {
         $infos = array();
         $infos['ean'] = $ean;
-        
+
         $brand = array_key_exists('brand', $parametersInfos) ? $parametersInfos['brand'] : null;
         if(empty($brand))
         {
@@ -408,7 +408,7 @@ class EcomInfo
         $client->setClient($torGuzzleClient);
         $client->setHeader('User-Agent', "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36".rand());
         $crawler = $client->request('GET', $url);
-        
+
         $label = null;
         $crawler->filter('#main a')->eq(0)->each(function ($node) use (& $label){
             $label = $node->text();
@@ -615,6 +615,7 @@ class EcomInfo
     protected function getInfosOfFromMisterGoodDeal($ean, $productType, $parametersInfos)
     {
         $infos = array();
+        return $infos;
         $infos['ean'] = $ean;
 
         $url = 'http://www.mistergooddeal.com/nav/recherche?srctype=list&text='.urlencode($ean);
@@ -832,7 +833,7 @@ class EcomInfo
 
         $model = array_key_exists('model', $parametersInfos) ? $parametersInfos['model'] : null;
         $brand = array_key_exists('brand', $parametersInfos) ? $parametersInfos['brand'] : null;
-        
+
         if(stripos($crawler->text(), 'il faut que nous nous assurions que vous n\'êtes pas un robot') !== false)
         {
             //TODO : Custom exception
@@ -1084,7 +1085,7 @@ class EcomInfo
         }
         $client->setHeader('User-Agent', "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36");
         $crawler = $client->request('GET', $url);
-        
+
         if(stripos($crawler->text(), 'tes pas un robot.') !== false)
         {
             if( ! $useTor)
@@ -1096,7 +1097,7 @@ class EcomInfo
                 throw new \Exception("AmazonRobotException");
             }
         }
-        
+
         $newUrl = null;
         $crawler->filter('#result_0 a')->eq(0)->each(function ($node) use (& $newUrl){
             $newUrl = $node->attr('href');
@@ -1280,7 +1281,7 @@ class EcomInfo
         {
             $infos['expirated'] = "true";
         }
-        
+
         return $infos;
     }
 
@@ -1333,7 +1334,7 @@ class EcomInfo
 
             $client = new \Goutte\Client();
             $crawler = $client->request('GET', $newUrl);
-            
+
             $textContent = $crawler->text();
             if(stripos($textContent, $brand) === false || stripos($textContent, $model) === false)
             {
@@ -1518,7 +1519,7 @@ class EcomInfo
         $json = file_get_contents($url);
         $tmp = @json_decode($json, true);
         $newUrl =  is_array($tmp) && array_key_exists(0, $tmp['results']) ? $tmp['results'][0]['unescapedUrl'] : null;
-        
+
         if ($newUrl == null)
         {
             $brands = array_key_exists('brand', $parametersInfos) ? $parametersInfos['brand'] : array();
@@ -1597,7 +1598,7 @@ class EcomInfo
             $fullContent = $node->text();
             $textLabel = null;
             $value = null;
-            
+
             $node->filter('span')->eq(0)->each(function($subNode) use (& $value)
             {
                 $value = $subNode->text();
@@ -1688,7 +1689,7 @@ class EcomInfo
         $client = new \Goutte\Client();
         $crawler = $client->request('GET', $url);
 
-        
+
         $newUrl = null;
         $done = false;
         $crawler->filter('#main-liste-articles a')->eq(0)->each(function ($node) use (& $newUrl)
@@ -1772,7 +1773,7 @@ class EcomInfo
         $crawler = $client->request('GET', $newUrl);
 
         var_dump($newUrl);
-        
+
         var_dump($crawler->getUri());
 
         var_dump("fin");
@@ -1844,7 +1845,7 @@ class EcomInfo
         $textLabel = trim($textLabel, ':');
         $textLabel = trim($textLabel);
         $value = trim($value);
-        
+
         if($textLabel == 'Essorage' && stripos($value, 'db')!== false)
         {
             $textLabel='BruitEssorage';
@@ -1869,7 +1870,7 @@ class EcomInfo
         {
             $textLabel='InternalCode';
         }
-        
+
         switch($textLabel)
         {
             case 'Efficacité sols durs':
@@ -1918,7 +1919,7 @@ class EcomInfo
             case 'CapacitéCouvert':
                 $infos['nombreCouvert'] = $value;
                 break;
-                
+
             case 'Classe de qualité de filtration':
                 $infos['filtration'] = $value;
                 break;
@@ -1946,12 +1947,12 @@ class EcomInfo
                 $infos['volumeFreezer'] = $this->cleanVolume($value);
                 break;
             case 'Largeur (cm)':
-            case 'Largeur d\'encastrement (cm)': 
+            case 'Largeur d\'encastrement (cm)':
             case 'Type de lave vaisselle':
                 $infos['largeur'] = $this->cleanLargeur($value);
                 break;
             case 'Classe d\'efficacité énergétique':
-            
+
             case 'Classe énergie':
             case 'Classe énergétique':
             case 'Efficacité énergétique (10 niveaux)':
@@ -1970,14 +1971,14 @@ class EcomInfo
             case 'Puissance':
                 $infos['puissance'] = $this->cleanPuissance($value);
                 break;
-            
+
             case 'Système de nettoyage':
                 $infos['fourNettoyage'] = $this->cleanFourNettoyage($value);
                 break;
-            
+
             case 'Modèle':
             case 'Code':
-            //case 'Référence':
+                //case 'Référence':
             case 'Numéro du modèle de l\'article':
             case 'Référence constructeur':
                 if($value != $infos['ean'])
@@ -2014,13 +2015,13 @@ class EcomInfo
             case 'Efficacité d\'essorage':
                 $infos['qualiteEssorage'] = $this->cleanEnergyClass($value);
                 break;
-            
+
             case 'Qualité de séchage':
             case 'Efficacité de séchage':
             case 'Efficacité de séchage':
                 $infos['qualiteSechage'] = $this->cleanEnergyClass($value);
                 break;
-            
+
             case 'Classe d\'efficacité fluidodynamique (efficacité de l\'aspiration)':
                 $infos['energyClassAspiration'] = $this->cleanEnergyClass($value);
                 break;
@@ -2028,12 +2029,12 @@ class EcomInfo
             case 'Classe d\'efficacité lumineuse':
                 $infos['energyClassLight'] = $this->cleanEnergyClass($value);
                 break;
-            
+
             case 'Classe d\'efficacité de filtration des graisses':
                 $infos['energyClassGraisse'] = $this->cleanEnergyClass($value);
                 break;
-                
-            
+
+
             case 'Capacité de lavage':
             case 'Capacité maximale au lavage':
             case 'Capacité de chargement':
@@ -2044,7 +2045,7 @@ class EcomInfo
             case 'Volume du tambour':
             case 'Volume du tambour':
             case 'CapacitéVolume':
-            
+
                 $infos['capacityVolume'] = $this->cleanVolume($value);
                 break;
             case 'Niveau sonore en lavage':
@@ -2052,7 +2053,7 @@ class EcomInfo
             case 'BruitLavage':
                 $infos['bruitLavage'] = $this->cleanBruit($value);
                 break;
-            
+
             case 'Type de nettoyage':
                 $infos['nettoyage'] = $this->cleanNettoyage($value);
                 break;
@@ -2092,7 +2093,7 @@ class EcomInfo
         $value = str_ireplace('watts', '', $value);
         $value = str_ireplace('watt', '', $value);
         $value = str_ireplace('w', '', $value);
-        
+
         return trim($value);
     }
 
@@ -2207,7 +2208,7 @@ class EcomInfo
         }
         return $value;
     }
-    
+
     protected function urlMatchModel($newUrl, $model)
     {
         if(stripos($newUrl, $model) !== false)
@@ -2229,7 +2230,7 @@ class EcomInfo
         if(strpos($model, ' ') !== false)
         {
             $tmp = array_filter(explode(' ', $model));
-            
+
             foreach($tmp as $term)
             {
                 if( ! $this->urlMatchModel($newUrl, $term))
@@ -2241,7 +2242,7 @@ class EcomInfo
         }
         return false;
     }
-    
+
     protected function getInfosFromBreadcrumb($infos, $breadcrumbText, $productType)
     {
         if(empty($breadcrumbText))
