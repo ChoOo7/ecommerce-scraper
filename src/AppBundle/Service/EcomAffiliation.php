@@ -61,11 +61,11 @@ class EcomAffiliation
 
             case 'www.priceminister.fr':
                 return $this->getAffiliationForPriceminister($url);
-
+/*
             case 'www.mistergooddeal.fr':
             case 'www.mistergooddeal.com':
                 return $this->getAffiliationForMisterGoodDeal($url);
-
+*/
             case 'www.webdistrib.fr':
             case 'www.webdistrib.com':
                 return $this->getAffiliationForWebDistrib($url);

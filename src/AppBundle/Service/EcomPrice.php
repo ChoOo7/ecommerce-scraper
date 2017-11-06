@@ -66,7 +66,7 @@ class EcomPrice
                     break;
 
                 case 'www.mistergooddeal.com':
-                    $price = $this->getPriceFromMisterGoodDeal($url);
+                    //$price = $this->getPriceFromMisterGoodDeal($url);
                     break;
 
                 case 'www.electrodepot.fr':
