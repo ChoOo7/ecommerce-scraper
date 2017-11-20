@@ -35,10 +35,11 @@ class EcomAffiliation
         $hostname = strtolower($hostname);
         switch($hostname)
         {
+/*
             case 'www.darty.fr':
             case 'www.darty.com':
                 return $this->getAffiliationForDarty($url);
-
+*/
             case 'www.boulanger.fr':
             case 'www.boulanger.com':
                 return $this->getAffiliationForBoulanger($url);
@@ -50,7 +51,7 @@ class EcomAffiliation
             case 'www.rueducommerce.fr':
             case 'www.rueducommerce.com':
                 return $this->getAffiliationForRueDuCommerce($url);
-
+/*
             case 'www.but.fr':
             case 'www.but.com':
                 return $this->getAffiliationForBut($url);
@@ -58,7 +59,7 @@ class EcomAffiliation
             case 'www.conforama.fr':
             case 'www.conforama.com':
                 return $this->getAffiliationForConforama($url);
-
+*/
             case 'www.priceminister.fr':
                 return $this->getAffiliationForPriceminister($url);
 /*
@@ -74,14 +75,13 @@ class EcomAffiliation
             case 'www.cdiscount.com':
                 return $this->getAffiliationForCDiscount($url);
 
-
             case 'www.villatech.fr':
             case 'www.villatech.com':
                 return $this->getAffiliationForVillatech($url);
-
+                
             case 'www.magasins-privilege.fr':
                 return $this->getAffiliationForMagazinPrivilege($url);
-
+                
             case 'www.electrodepot.fr':
             case 'www.electrodepot.com':
                 return $this->getAffiliationForElectroDepot($url);
