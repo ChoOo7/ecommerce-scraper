@@ -35,11 +35,10 @@ class EcomAffiliation
         $hostname = strtolower($hostname);
         switch($hostname)
         {
-/*
             case 'www.darty.fr':
             case 'www.darty.com':
                 return $this->getAffiliationForDarty($url);
-*/
+                
             case 'www.boulanger.fr':
             case 'www.boulanger.com':
                 return $this->getAffiliationForBoulanger($url);
@@ -142,12 +141,12 @@ class EcomAffiliation
 
     protected function getAffiliationForDarty($url)
     {
-        return $this->getAffiliateWindowsLink($url);
+        return $this->getAffiliateWindowsLink($url, 7735);
     }
 
     protected function getAffiliationForRueDuCommerce($url)
     {
-        return $this->getAffiliateWindowsLink($url);
+        return $this->getAffiliateWindowsLink($url, 6901);
     }
 
     protected function getAffiliationForBut($url)
