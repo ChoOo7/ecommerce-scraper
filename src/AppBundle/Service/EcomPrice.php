@@ -40,12 +40,11 @@ class EcomPrice
                     $price = $this->getPriceFromBoulanger($url);
                     break;
 
-/*
                 case 'www.darty.fr':
                 case 'www.darty.com':
                     $price = $this->getPriceFromDarty($url);
                     break;
-*/
+                    
                 case 'www.amazon.fr':
                     $price = $this->getPriceFromAmazon($url, $useTor);
                     break;
