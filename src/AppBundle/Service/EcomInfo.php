@@ -1754,6 +1754,7 @@ class EcomInfo
 
     protected function getInfosOfFromAlloPneus($ean, $productType, $parametersInfos)
     {
+        return null;
         $infos = array();
 
         $url = 'https://www.google.fr/search?q='.urlencode($ean);
