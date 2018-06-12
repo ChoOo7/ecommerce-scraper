@@ -1511,6 +1511,9 @@ class EcomInfo
 
     protected function getInfosOfFromArredatutto($ean, $productType, $parametersInfos)
     {
+        //ne marche pas
+        return null;
+
         $infos = array();
         $infos['ean'] = $ean;
 
