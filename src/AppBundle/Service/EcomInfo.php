@@ -1066,7 +1066,7 @@ class EcomInfo
     }
 
 
-    protected function getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft = 3, $useTor = false)
+    protected function getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft = 2, $useTor = true)
     {
         $infos = array();
         $infos['ean'] = $ean;
@@ -1110,9 +1110,10 @@ class EcomInfo
         if($newUrl == null && $tryLeft > 0)
         {
             echo($crawler->html());
-            sleep(6-$tryLeft);
+            sleep(max(1, 2-$tryLeft));
             $tryLeft--;
             echo "\nretrying getInfosOfFromAmazon";
+            $useTor = $useTor && $tryLeft > 0;
             return $this->getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft, $useTor);
         }
         if($newUrl == null)

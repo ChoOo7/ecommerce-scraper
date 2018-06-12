@@ -26,7 +26,7 @@ class EcomPrice
     /**
      * {@inheritDoc}
      */
-    public function getPrice($url, $tryLeft = 6, $useTor = false)
+    public function getPrice($url, $tryLeft = 3, $useTor = false)
     {
         $price = null;
         $hostname = parse_url($url, PHP_URL_HOST);
@@ -170,8 +170,8 @@ class EcomPrice
         }
         catch(\Exception $e)
         {
-            $sleepTime = 10-$tryLeft;
-            sleep($sleepTime);
+            $sleepTime = 3-$tryLeft;
+            sleep(max(1, $sleepTime));
             $tryLeft++;
             echo "\nError getting price : ".$e->getMessage()." - sleeping ".($sleepTime);
         }
@@ -245,7 +245,7 @@ class EcomPrice
         return $price;
     }
 
-    protected function getPriceFromAmazon($url, $tryLeft = 5, $useTor = false)
+    protected function getPriceFromAmazon($url, $tryLeft = 2, $useTor = true)
     {
         $stack = new \GuzzleHttp\HandlerStack();
         $stack->setHandler(new \GuzzleHttp\Handler\CurlHandler());
@@ -291,7 +291,7 @@ class EcomPrice
 
         if($price == 0 && $tryLeft > 0)
         {
-            sleep(6-$tryLeft);
+            sleep(max(1, 2-$tryLeft));
             $tryLeft--;
             return $this->getPriceFromAmazon($url, $tryLeft);
         }
