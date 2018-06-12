@@ -293,7 +293,8 @@ class EcomPrice
         {
             sleep(max(1, 2-$tryLeft));
             $tryLeft--;
-            return $this->getPriceFromAmazon($url, $tryLeft);
+            $useTor = $useTor && $tryLeft > 0;
+            return $this->getPriceFromAmazon($url, $tryLeft, $useTor);
         }
 
         return $price;
