@@ -247,7 +247,7 @@ class EcomPrice
 
     protected function getPriceFromAmazon($url, $tryLeft = 1, $useTor = true)
     {
-        //return null;
+        return null;
         $stack = new \GuzzleHttp\HandlerStack();
         $stack->setHandler(new \GuzzleHttp\Handler\CurlHandler());
         $stack->push(\GuzzleTor\Middleware::tor());
