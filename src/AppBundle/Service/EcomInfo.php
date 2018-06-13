@@ -1066,9 +1066,9 @@ class EcomInfo
     }
 
 
-    protected function getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft = 2, $useTor = true)
+    protected function getInfosOfFromAmazon($ean, $productType, $parametersInfos, $tryLeft = 1, $useTor = true)
     {
-        return null;
+        //return null;
         $infos = array();
         $infos['ean'] = $ean;
 
