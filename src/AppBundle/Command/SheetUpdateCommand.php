@@ -616,7 +616,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $docId = $this->input->getOption('doc');
         $documentLink = 'https://docs.google.com/spreadsheets/d/'.$docId.'/edit';
 
-        $mailFileName = date('Y-m-m-H:i:s').'-'.uniqid('a').'.html';
+        $mailFileName = $category.'-'.date('Y-m-d-H:i:s').'-'.uniqid('a').'.html';
         $isRasp = ! file_exists('/1to/');
         $hostname = $isRasp ? 'ecom-scrapper.home.chooo7.com' : 'ecom.local';
         $onlineEmailLink = 'http://'.$hostname.'/mail/'.$mailFileName;
@@ -646,7 +646,12 @@ class SheetUpdateCommand extends ContainerAwareCommand
 
         $root = $this->getContainer()->get('kernel')->getRootDir().'/../';
         //$root = $this->kernel->getRootDir();
-        $dir = $root.'/web/mail/';
+        $dir = $root.'/web/mail/'.date('Y-m-d');
+        if( ! file_exists($dir))
+        {
+            mkdir($dir);
+            chmod($dir, 0777);
+        }
         file_put_contents($dir.$mailFileName, $mailHtmlContent);
         
         $email = new \SendGrid\Email();
