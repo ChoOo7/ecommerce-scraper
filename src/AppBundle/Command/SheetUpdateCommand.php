@@ -632,7 +632,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $isRasp = ! file_exists('/1to/');
         $hostname = $isRasp ? 'ecom-scrapper.home.chooo7.com' : 'ecom.local';
         $onlineEmailLink = 'http://'.$hostname.'/mail/'.$subDir.'/'.$mailFileName;
-        
+
 
         $subject = "Import result ";
         if($category)
@@ -656,7 +656,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
 
         $mailHtmlContent = '<html><head></head><body>'.$body.'</body></html>';
 
-        file_put_contents($dir.$mailFileName, $mailHtmlContent);
+        file_put_contents($dir.'/'.$mailFileName, $mailHtmlContent);
         
         $email = new \SendGrid\Email();
         foreach($tos as $to)
