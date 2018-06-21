@@ -616,10 +616,22 @@ class SheetUpdateCommand extends ContainerAwareCommand
         $docId = $this->input->getOption('doc');
         $documentLink = 'https://docs.google.com/spreadsheets/d/'.$docId.'/edit';
 
+
+
+        $root = $this->getContainer()->get('kernel')->getRootDir().'/../';
+        //$root = $this->kernel->getRootDir();
+        $subDir = date('Y-m-d');
+        $dir = $root.'/web/mail/'.$subDir;
+        if( ! file_exists($dir))
+        {
+            mkdir($dir);
+            chmod($dir, 0777);
+        }
+
         $mailFileName = $category.'-'.date('Y-m-d-H:i:s').'-'.uniqid('a').'.html';
         $isRasp = ! file_exists('/1to/');
         $hostname = $isRasp ? 'ecom-scrapper.home.chooo7.com' : 'ecom.local';
-        $onlineEmailLink = 'http://'.$hostname.'/mail/'.$mailFileName;
+        $onlineEmailLink = 'http://'.$hostname.'/mail/'.$subDir.'/'.$mailFileName;
         
 
         $subject = "Import result ";
@@ -644,14 +656,6 @@ class SheetUpdateCommand extends ContainerAwareCommand
 
         $mailHtmlContent = '<html><head></head><body>'.$body.'</body></html>';
 
-        $root = $this->getContainer()->get('kernel')->getRootDir().'/../';
-        //$root = $this->kernel->getRootDir();
-        $dir = $root.'/web/mail/'.date('Y-m-d');
-        if( ! file_exists($dir))
-        {
-            mkdir($dir);
-            chmod($dir, 0777);
-        }
         file_put_contents($dir.$mailFileName, $mailHtmlContent);
         
         $email = new \SendGrid\Email();
