@@ -147,7 +147,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                     {
                         foreach ($detectedInfos['uri'] as $provider => $_uri)
                         {
-                            $linksInfos .= ' <a href="' . $_uri . '">' . $provider . '</a>';
+                            $linksInfos .= ' <a target="_blank" href="' . $_uri . '">' . $provider . '</a>';
                         }
                     }
                     
@@ -195,13 +195,13 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                         $formatedValue = $value;
                                         if(in_array($columnName, array('image_url', 'image_energy_url')))
                                         {
-                                            $formatedValue = '<a href="'.$value.'"><img src="'.$value.'" width="100" alt="view image" /></a>';
+                                            $formatedValue = '<a target="_blank" href="'.$value.'"><img src="'.$value.'" width="100" alt="view image" /></a>';
                                         }
 
                                         $column = $columnIndexes[$columnName];
                                         $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
                                         
-                                        $errorMessage.="\n"."  - ".$provider.' - '.$formatedValue .' <a href="'.$updateUrl.'">CHOOSE IT</a>'.($link ?  ' ( <a href="'.$link.'">view website</a>" )' : '');
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$formatedValue .' <a target="_blank" href="'.$updateUrl.'">CHOOSE IT</a>'.($link ?  ' ( <a target="_blank" href="'.$link.'">view website</a>" )' : '');
                                     }
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
@@ -209,7 +209,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $formatedValue = $newValue;
                                     if(in_array($columnName, array('image_url', 'image_energy_url')))
                                     {
-                                        $formatedValue = '<a href="'.$newValue.'"><img src="'.$newValue.'" width="100" alt="view image" /></a>';
+                                        $formatedValue = '<a target="_blank" href="'.$newValue.'"><img src="'.$newValue.'" width="100" alt="view image" /></a>';
                                     }
                                     
                                     $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $columnName . ' is empty, we fill it with : '.$formatedValue. ' ('.count($detectedValues).' concordant infos)';
@@ -253,7 +253,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                         $column = $columnIndexes[$columnName];
                                         $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($column.$globalLineNumber=>$value));
                                         
-                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a href="'.$updateUrl.'">CHOOSE IT</a> ( <a href="'.$link.'>view website</a> )';
+                                        $errorMessage.="\n"."  - ".$provider.' - '.$value .' <a target="_blank" href="'.$updateUrl.'">CHOOSE IT</a> ( <a target="_blank" href="'.$link.'>view website</a> )';
                                     }
                                 }
                             }
@@ -282,7 +282,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 if($variationIsOk)
                                 {
                                     $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from ' . $actualPrice . ' to ' . $newPrice . ' on url <a href="' . $readedInfos['uri'][$localIndex] . '">' . $hostname . '</a>';
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' updating price from ' . $actualPrice . ' to ' . $newPrice . ' on url <a target="_blank" href="' . $readedInfos['uri'][$localIndex] . '">' . $hostname . '</a>';
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
 
@@ -292,12 +292,12 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $ecomSheet->setSheetValue($docId, $column . $globalLineNumber, date('d/m/Y H:i:s'), $sheet['title']);
                                 }else{
                                     $hostname = parse_url($readedInfos['uri'][$localIndex], PHP_URL_HOST);
-                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' price from ' . $actualPrice . ' to ' . $newPrice . ' on url <a href="' . $readedInfos['uri'][$localIndex] . '">' . $hostname . '</a>';
+                                    $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' price from ' . $actualPrice . ' to ' . $newPrice . ' on url <a target="_blank" href="' . $readedInfos['uri'][$localIndex] . '">' . $hostname . '</a>';
 
                                     $columnPrice = $columnIndexes['price'];
                                     $columnDate = $columnIndexes['lastUpdateDate'];
                                     $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($columnPrice.$globalLineNumber=>$newPrice, $columnDate.$globalLineNumber=>date('d/m/Y H:i:s')));
-                                    $errorMessage .= '<br /><a href="'.$updateUrl.'">confirm and set new price</a>';
+                                    $errorMessage .= '<br /><a target="_blank" href="'.$updateUrl.'">confirm and set new price</a>';
                                     
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
@@ -312,7 +312,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     {
                                         $errorMessage .= 'EXPIRATED : ';
                                     }
-                                    $errorMessage .= 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$_uri.'">'.$hostname.'</a>, we remove link and price. (google sheet price : '.((string)$actualPrice).')';
+                                    $errorMessage .= 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a target="_blank" href="'.$_uri.'">'.$hostname.'</a>, we remove link and price. (google sheet price : '.((string)$actualPrice).')';
                                     $errorMessage .= ' <br /> '.$linksInfos;
 
                                     $this->errors[] = $errorMessage;
@@ -334,14 +334,14 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     {
                                         $errorMessage .= 'EXPIRATED : ';
                                     }
-                                    $errorMessage .= 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a> (google sheet price : '.((string)$actualPrice).')';
+                                    $errorMessage .= 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . ' no price detected on url <a target="_blank" href="'.$readedInfos['uri'][$localIndex].'">'.$hostname.'</a> (google sheet price : '.((string)$actualPrice).')';
                                     $errorMessage .= ' <br /> '.$linksInfos;
 
                                     $columnPrice = $columnIndexes['price'];
                                     $columnUri = $columnIndexes['uri'];
                                     
                                     $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($columnPrice.$globalLineNumber=>'', $columnUri.$globalLineNumber=>''));
-                                    $errorMessage .= '<br /><a href="'.$updateUrl.'">confirm and remove price and link</a>';
+                                    $errorMessage .= '<br /><a target="_blank" href="'.$updateUrl.'">confirm and remove price and link</a>';
 
                                     $this->errors[] = $errorMessage;
                                     $this->output->writeln($errorMessage);
@@ -374,7 +374,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                 $brand = (string)$brand;
                                 $model = (string)$model;
 
-                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $brand . ' - ' . $model . ' -  we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a href="' . $newUrl . '">view website</a>';
+                                $errorMessage = 'Onglet ' . $sheet['title'] . ' Ligne ' . $globalLineNumber . ' - ' . $brand . ' - ' . $model . ' -  we found a better price on : ' . $provider . ' - ' . $oldPrice . ' -> ' . $proposedPrice . ' - <a target="_blank" href="' . $newUrl . '">view website</a>';
                                 
                                 
                                 if($variationIsOk)
@@ -392,7 +392,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
                                     $columnUri = $columnIndexes['uri'];
                                     
                                     $updateUrl = $this->generateSetValueUrl($docId, $sheet['title'], array($columnPrice.$globalLineNumber=>$proposedPrice, $columnUri.$globalLineNumber=>$newUrl));
-                                    $errorMessage .= '<br /><a href="'.$updateUrl.'">confirm and set price and link</a>';
+                                    $errorMessage .= '<br /><a target="_blank" href="'.$updateUrl.'">confirm and set price and link</a>';
                                 }
                                 $errorMessage .= ' <br /> ' . $linksInfos;
                             }
@@ -423,7 +423,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
             }            
         }
         
-        $this->sendMailWithErrors($category);
+        $this->sendMailWithErrors($category, $checkInfo);
         
         $this->output->writeln("DONE");
     }
@@ -586,7 +586,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
         return null;
     }
     
-    protected function sendMailWithErrors($category)
+    protected function sendMailWithErrors($category, $checkInfo = false)
     {
         if(empty($this->errors))
         {
@@ -628,7 +628,7 @@ class SheetUpdateCommand extends ContainerAwareCommand
             chmod($dir, 0777);
         }
 
-        $mailFileName = $category.'-'.date('Y-m-d-H:i:s').'-'.uniqid('a').'.html';
+        $mailFileName = $category.($checkInfo ? '-checkInfo' : '').'-'.date('Y-m-d-H:i:s').'-'.uniqid('a').'.html';
         $isRasp = ! file_exists('/1to/');
         $hostname = $isRasp ? 'ecom-scrapper.home.chooo7.com' : 'ecom.local';
         $onlineEmailLink = 'http://'.$hostname.'/mail/'.$subDir.'/'.$mailFileName;
@@ -641,8 +641,8 @@ class SheetUpdateCommand extends ContainerAwareCommand
         }
         $body = "<h1>Actions : </h1>";
         $body .= "\n".'<div>';
-        $body .= "\n".'<p>Document : <a href="'.$documentLink.'">'.$documentLink.'</a></p>';
-        $body .= "\n".'<p>View this email online : <a href="'.$onlineEmailLink.'">'.$onlineEmailLink.'</a></p>';
+        $body .= "\n".'<p>Document : <a target="_blank" href="'.$documentLink.'">'.$documentLink.'</a></p>';
+        $body .= "\n".'<p>View this email online : <a target="_blank" href="'.$onlineEmailLink.'">'.$onlineEmailLink.'</a></p>';
         $body .= "\n".'</div>';
         $body .= "\n".'<div>';
         $body .= "\n".'<ul>';
