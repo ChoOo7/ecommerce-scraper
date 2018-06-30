@@ -182,7 +182,7 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
             }
         }
         
-        $this->sendMailWithErrors();
+        $this->sendMailWithErrors($category);
         
         $this->output->writeln("DONE");
     }
@@ -223,7 +223,7 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
         );
     }
     
-    protected function sendMailWithErrors()
+    protected function sendMailWithErrors($category)
     {
         if(empty($this->errors))
         {
@@ -260,7 +260,29 @@ class SheetFindBetterPriceCommand extends ContainerAwareCommand
         }
         $body .= "\n".'</ul>';
         $body .= "\n".'</div>';
-        
+
+
+        $root = $this->getContainer()->get('kernel')->getRootDir().'/../';
+        //$root = $this->kernel->getRootDir();
+        $subDir = date('Y-m-d');
+        $dir = $root.'/web/mail/'.$subDir;
+        if( ! file_exists($dir))
+        {
+            mkdir($dir);
+            chmod($dir, 0777);
+        }
+
+
+        $mailFileName = 'check-info-'.$category.'-'.date('Y-m-d-H:i:s').'-'.uniqid('a').'.html';
+        $isRasp = ! file_exists('/1to/');
+        $hostname = $isRasp ? 'ecom-scrapper.home.chooo7.com' : 'ecom.local';
+        $onlineEmailLink = 'http://'.$hostname.'/mail/'.$subDir.'/'.$mailFileName;
+
+
+        $mailHtmlContent = '<html><head></head><body>'.$body.'</body></html>';
+
+        file_put_contents($dir.'/'.$mailFileName, $mailHtmlContent);
+
         $email = new \SendGrid\Email();
         foreach($tos as $to)
         {
